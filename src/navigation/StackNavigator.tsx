@@ -2,12 +2,14 @@ import React from "react";
 import { createStackNavigator } from "@react-navigation/stack";
 
 import LoginScreen from "../screens/auth/LoginScreen";
+import RegisterScreen from "../screens/auth/RegisterScreen";
 import HomeScreen from "../screens/home/HomeScreen";
 import ActivityScreen from "../screens/activity/ActivityScreen";
 import ProfileScreen from "../screens/profile/ProfileScreen";
 
 export type RootStackParamList = {
   Login: undefined;
+  Register: undefined;
   Home: undefined;
   Activity: {
     activityName: string;
@@ -25,50 +27,14 @@ const StackNavigator: React.FC = () => {
     <Stack.Navigator
       initialRouteName="Login"
       screenOptions={{
-        headerStyle: {
-          backgroundColor: "#25c4d6ff",
-        },
-        headerTintColor: "#ffffff",
-        headerTitleStyle: {
-          fontWeight: "bold",
-          fontSize: 18,
-        },
+        headerShown: false,
       }}
     >
-      <Stack.Screen
-        name="Login"
-        component={LoginScreen}
-        options={{
-          title: "Comenzar",
-          headerShown: false,
-        }}
-      />
-
-      <Stack.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{
-          title: "FitUp",
-          headerLeft: () => null,
-          headerShown: false,
-        }}
-      />
-
-      <Stack.Screen
-        name="Activity"
-        component={ActivityScreen}
-        options={{
-          headerShown: false,
-        }}
-      />
-
-      <Stack.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{
-          headerShown: false,
-        }}
-      />
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Register" component={RegisterScreen} />
+      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen name="Activity" component={ActivityScreen} />
+      <Stack.Screen name="Profile" component={ProfileScreen} />
     </Stack.Navigator>
   );
 };

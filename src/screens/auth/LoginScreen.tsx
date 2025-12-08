@@ -14,78 +14,51 @@ import {
 } from "react-native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../../navigation/StackNavigator";
-import { LoginFormData, FONT_SIZES } from "../../../types/index";
+import { iniciarSesion } from "../../services/authService";
+import { FONT_SIZES } from "../../../types/index";
 
-// Imagen del logo
 const loginImage = require("../../../assets/PESA.png");
 
-type LoginScreenNavigationProp = StackNavigationProp<
-  RootStackParamList,
-  "Login"
->;
+type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, "Login">;
 
 interface LoginScreenProps {
   navigation: LoginScreenNavigationProp;
 }
 
 const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
-  const [formData, setFormData] = useState<LoginFormData>({
-    username: "",
-    password: "",
-  });
-  const [rememberMe, setRememberMe] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-
-  const updateFormData = (field: keyof LoginFormData, value: string): void => {
-    setFormData((prevData) => ({
-      ...prevData,
-      [field]: value,
-    }));
-  };
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const validateForm = (): boolean => {
-    if (!formData.username.trim()) {
-      Alert.alert("Error", "Por favor, ingrese su usuario");
+    if (!email.trim()) {
+      Alert.alert("Error", "Por favor, ingresa tu correo");
       return false;
     }
-    if (!formData.password.trim()) {
-      Alert.alert("Error", "Por favor, ingrese su contraseña");
-      return false;
-    }
-    if (formData.password.length < 4) {
-      Alert.alert("Error", "La contraseña debe tener al menos 4 caracteres");
+    if (!password.trim()) {
+      Alert.alert("Error", "Por favor, ingresa tu contraseña");
       return false;
     }
     return true;
   };
 
-  const handleLogin = (): void => {
-    if (!validateForm()) {
-      return;
-    }
-    authenticateUser();
-  };
+  const handleLogin = async () => {
+    if (!validateForm()) return;
 
-  const authenticateUser = (): void => {
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      console.log("Usuario autenticado:", formData.username);
+    try {
+      await iniciarSesion(email, password);
       navigation.replace("Home");
-    }, 2000);
+    } catch (error: any) {
+      Alert.alert("Error", error.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleForgotPassword = (): void => {
+  const handleForgotPassword = () => {
     Alert.alert(
       "Recuperar Contraseña",
-      "Esta funcionalidad estará disponible próximamente.",
-      [{ text: "Entendido" }]
-    );
-  };
-
-  const handleGoogleSignIn = (): void => {
-    Alert.alert(
-      "Registrarme",
       "Esta funcionalidad estará disponible próximamente.",
       [{ text: "Entendido" }]
     );
@@ -96,80 +69,71 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <SafeAreaView>
+      <SafeAreaView style={styles.container}>
+        
+          <View style={styles.header}>
+            <Image source={loginImage} style={styles.logo} />
+            <Text style={styles.appName}>FITUP</Text>
+            <Text style={styles.appSubtitle}>Exercise app</Text>
+          </View>
 
-      
-        {/* Header con logo */}
-        <View style={styles.header}>
-          <Image source={loginImage} style={styles.logo} />
-          <Text style={styles.appName}>FITUP</Text>
-          <Text style={styles.appSubtitle}>Exercise app</Text>
-        </View>
+          <View style={styles.card}>
+            <Text style={styles.welcomeTitle}>BIENVENIDO</Text>
+            <Text style={styles.welcomeSubtitle}>¿Listo para entrenar?</Text>
 
-        {/* Card de login */}
-        <View style={styles.card}>
-          <Text style={styles.welcomeTitle}>BIENVENIDO</Text>
-          <Text style={styles.welcomeSubtitle}>¿Listo para entrenar?</Text>
+            <View style={styles.formContainer}>
+              <Text style={styles.label}>Correo electrónico</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="correo@ejemplo.com"
+                placeholderTextColor="#999"
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="email-address"
+                editable={!isLoading}
+              />
 
-          {/* Formulario */}
-          <View style={styles.formContainer}>
-            {/* Email */}
-            <Text style={styles.label}>Usuario</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Ingresa tu usuario"
-              placeholderTextColor="#999"
-              value={formData.username}
-              onChangeText={(text) => updateFormData("username", text)}
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="email-address"
-              editable={!isLoading}
-            />
+              <Text style={styles.label}>Contraseña</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="••••••••••"
+                placeholderTextColor="#999"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={!isLoading}
+              />
 
-            {/* Contraseña */}
-            <Text style={styles.label}>Contraseña</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="••••••••••"
-              placeholderTextColor="#999"
-              value={formData.password}
-              onChangeText={(text) => updateFormData("password", text)}
-              secureTextEntry={true}
-              autoCapitalize="none"
-              autoCorrect={false}
-              editable={!isLoading}
-            />
+              <View style={styles.optionsRow}>
+                <TouchableOpacity onPress={handleForgotPassword} disabled={isLoading}>
+                  <Text style={styles.forgotPassword}>Olvidé mi contraseña</Text>
+                </TouchableOpacity>
+              </View>
 
-            {/* Remember me y Forgot password */}
-            <View style={styles.optionsRow}>
-              
-              <TouchableOpacity onPress={handleForgotPassword} disabled={isLoading}>
-                <Text style={styles.forgotPassword}>Olvide mi contraseña</Text>
+              <TouchableOpacity
+                style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
+                onPress={handleLogin}
+                disabled={isLoading}
+              >
+                <Text style={styles.loginButtonText}>
+                  {isLoading ? "CARGANDO..." : "COMENZAR"}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.googleButton}
+                onPress={() => navigation.navigate("Register")}
+                disabled={isLoading}
+              >
+                <Text style={styles.googleButtonText}>Crear cuenta nueva</Text>
               </TouchableOpacity>
             </View>
-
-            {/* Botón Comenzar */}
-            <TouchableOpacity
-              style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
-              onPress={handleLogin}
-              disabled={isLoading}
-            >
-              <Text style={styles.loginButtonText}>
-                {isLoading ? "CARGANDO..." : "COMENZAR"}
-              </Text>
-            </TouchableOpacity>
-
-            {/* Botón Google Sign In */}
-            <TouchableOpacity
-              style={styles.googleButton}
-              onPress={handleGoogleSignIn}
-              disabled={isLoading}
-            >
-              <Text style={styles.googleButtonText}>Registrarme</Text>
-            </TouchableOpacity>
           </View>
-        </View>
+
       </SafeAreaView>
     </KeyboardAvoidingView>
   );
@@ -183,7 +147,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingVertical: 40,
-    paddingTop: 90
+    paddingTop: 90,
   },
   header: {
     alignItems: "center",
@@ -211,10 +175,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     padding: 30,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 4.65,
     elevation: 8,
@@ -254,37 +215,9 @@ const styles = StyleSheet.create({
   },
   optionsRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "flex-end",
     alignItems: "center",
     marginBottom: 20,
-  },
-  rememberMeContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 4,
-    borderWidth: 2,
-    borderColor: "#666",
-    marginRight: 8,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-  },
-  checkboxChecked: {
-    backgroundColor: "#F5C563",
-    borderColor: "#F5C563",
-  },
-  checkmark: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "bold",
-  },
-  rememberMeText: {
-    fontSize: 13,
-    color: "#2C2C2C",
   },
   forgotPassword: {
     fontSize: 13,
@@ -299,10 +232,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 15,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
