@@ -108,16 +108,19 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   };
 
  const handleNavigation = (option: MenuOption): void => {
-  if (option.route === "Activity") {
-    navigation.navigate("Activity", {
-      activityName: option.title,
-      activityIcon: option.icon,
-      activityIconLibrary: option.iconLibrary,
-      activityColor: option.color,
-    });
-  } else if (option.route) {
-    navigation.navigate(option.route);
+  // Esta parte se usa para que podamos verificar la opcion elegida por el usuario 
+  if (option.id === "cardio") {
+    navigation.navigate("Cardio");
+    return;
   }
+ 
+  // DESPUÉS el resto - todos van a Activity con parámetros
+  navigation.navigate("Activity", {
+    activityName: option.title,
+    activityIcon: option.icon,
+    activityIconLibrary: option.iconLibrary,
+    activityColor: option.color,
+  });
 };
 
   const renderIcon = (option: MenuOption) => {

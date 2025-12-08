@@ -6,11 +6,17 @@ import RegisterScreen from "../screens/auth/RegisterScreen";
 import HomeScreen from "../screens/home/HomeScreen";
 import ActivityScreen from "../screens/activity/ActivityScreen";
 import ProfileScreen from "../screens/profile/ProfileScreen";
+import CardioScreen from "../screens/cardio/CardioScreen";
+import FreeRunScreen from "../screens/cardio/FreeRunScreen";
+import WorkoutSummaryScreen from "../screens/cardio/WorkoutSummaryScreen";
+import { CardioWorkout } from '../../types/cardio.types';
+
 
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
   Home: undefined;
+  Cardio: undefined;  
   Activity: {
     activityName: string;
     activityIcon: string;
@@ -18,7 +24,10 @@ export type RootStackParamList = {
     activityColor: string;
   };
   Profile: undefined;
+  FreeRun: undefined;
+  WorkoutSummary: { workout: Omit<CardioWorkout, "id"> };
 };
+
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -35,6 +44,9 @@ const StackNavigator: React.FC = () => {
       <Stack.Screen name="Home" component={HomeScreen} />
       <Stack.Screen name="Activity" component={ActivityScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
+      <Stack.Screen name="Cardio" component={CardioScreen} />
+      <Stack.Screen name="FreeRun" component={FreeRunScreen} />
+      <Stack.Screen name="WorkoutSummary" component={WorkoutSummaryScreen} />
     </Stack.Navigator>
   );
 };
