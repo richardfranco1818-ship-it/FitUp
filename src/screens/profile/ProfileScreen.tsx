@@ -12,7 +12,6 @@ import {
   ActivityIndicator,
   Image,
   Modal,
-  Pressable,
   Linking,
 } from "react-native";
 import { MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
@@ -23,7 +22,7 @@ import { useAuth } from "../../context/AuthContext";
 import { actualizarPerfil } from "../../services/authService";
 import * as ImagePicker from "expo-image-picker";
 
-type ProfileScreenNavigationProp = StackNavigationProp< 
+type ProfileScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
   "Profile"
 >;
@@ -54,7 +53,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
-  
+
   // Estados locales para edición
   const [nombre, setNombre] = useState<string>("");
   const [email, setEmail] = useState<string>("");
@@ -78,133 +77,155 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   }, [profile]);
 
   // Solicitar permisos
-// Solicitar permisos
-const solicitarPermisos = async (): Promise<boolean> => {
-  // Verificar permisos de cámara
-  const cameraPermission = await ImagePicker.getCameraPermissionsAsync();
-  let cameraStatus = cameraPermission.status;
-  
-  if (cameraStatus !== "granted") {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    cameraStatus = status;
-  }
-
-  // Verificar permisos de galería
-  const mediaPermission = await ImagePicker.getMediaLibraryPermissionsAsync();
-  let mediaStatus = mediaPermission.status;
-  
-  if (mediaStatus !== "granted") {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    mediaStatus = status;
-  }
-
-  // Si los permisos fueron denegados permanentemente
-  if (cameraStatus === "denied" || mediaStatus === "denied") {
-    Alert.alert(
-      "Permisos necesarios",
-      "Para cambiar tu foto de perfil, necesitas habilitar los permisos en la configuración de tu dispositivo.",
-      [
-        { text: "Cancelar", style: "cancel" },
-        { text: "Abrir Configuración", onPress: () => Linking.openSettings() },
-      ]
-    );
-    return false;
-  }
-
-  return cameraStatus === "granted" && mediaStatus === "granted";
-};
+  const solicitarPermisos = async (tipo: "camera" | "library"): Promise<boolean> => {
+    try {
+      if (tipo === "camera") {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== "granted") {
+          Alert.alert(
+            "Permiso de cámara",
+            "Necesitamos acceso a tu cámara para tomar fotos.",
+            [
+              { text: "Cancelar", style: "cancel" },
+              { text: "Abrir Configuración", onPress: () => Linking.openSettings() },
+            ]
+          );
+          return false;
+        }
+        return true;
+      } else {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== "granted") {
+          Alert.alert(
+            "Permiso de galería",
+            "Necesitamos acceso a tu galería para seleccionar fotos.",
+            [
+              { text: "Cancelar", style: "cancel" },
+              { text: "Abrir Configuración", onPress: () => Linking.openSettings() },
+            ]
+          );
+          return false;
+        }
+        return true;
+      }
+    } catch (error) {
+      console.log("Error al solicitar permisos:", error);
+      return false;
+    }
+  };
 
   // Tomar foto con cámara
   const tomarFoto = async () => {
-  setModalVisible(false);
-  
-  const tienePermisos = await solicitarPermisos();
-  if (!tienePermisos) return;
+    setModalVisible(false);
 
-  const resultado = await ImagePicker.launchCameraAsync({
-    mediaTypes: ['images'],  // ← Cambio aquí
-    allowsEditing: true,
-    aspect: [1, 1],
-    quality: 0.7,
-  });
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
-  if (!resultado.canceled && resultado.assets[0]) {
-    guardarFoto(resultado.assets[0].uri);
-  }
-};
+    const tienePermisos = await solicitarPermisos("camera");
+    if (!tienePermisos) return;
+
+    try {
+      const resultado = await ImagePicker.launchCameraAsync({
+        mediaTypes: ["images"],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.7,
+      });
+
+      if (!resultado.canceled && resultado.assets && resultado.assets[0]) {
+        await guardarFoto(resultado.assets[0].uri);
+      }
+    } catch (error) {
+      console.log("Error al tomar foto:", error);
+      Alert.alert("Error", "No se pudo acceder a la cámara");
+    }
+  };
 
   // Seleccionar de galería
-const seleccionarDeGaleria = async () => {
-  setModalVisible(false);
-  
-  const tienePermisos = await solicitarPermisos();
-  if (!tienePermisos) return;
+  const seleccionarDeGaleria = async () => {
+    setModalVisible(false);
 
-  const resultado = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ['images'],  // ← Cambio aquí
-    allowsEditing: true,
-    aspect: [1, 1],
-    quality: 0.7,
-  });
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
-  if (!resultado.canceled && resultado.assets[0]) {
-    guardarFoto(resultado.assets[0].uri);
-  }
-};
+    const tienePermisos = await solicitarPermisos("library");
+    if (!tienePermisos) return;
+
+    try {
+      const resultado = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.7,
+      });
+
+      if (!resultado.canceled && resultado.assets && resultado.assets[0]) {
+        await guardarFoto(resultado.assets[0].uri);
+      }
+    } catch (error) {
+      console.log("Error al seleccionar imagen:", error);
+      Alert.alert("Error", "No se pudo acceder a la galería");
+    }
+  };
 
   // Guardar foto en el perfil
   const guardarFoto = async (uri: string) => {
-    if (!user) return;
+    if (!user) {
+      Alert.alert("Error", "No hay usuario autenticado");
+      return;
+    }
 
     setIsLoading(true);
     try {
       await actualizarPerfil(user.uid, { fotoPerfil: uri });
       setFotoPerfil(uri);
-      
+
       if (profile) {
         setProfile({ ...profile, fotoPerfil: uri });
       }
-      
+
       Alert.alert("Éxito", "Foto de perfil actualizada");
     } catch (error: any) {
-      Alert.alert("Error", "No se pudo actualizar la foto");
+      console.log("Error al guardar foto:", error);
+      Alert.alert("Error", "No se pudo actualizar la foto. Intenta de nuevo.");
     } finally {
       setIsLoading(false);
     }
   };
 
   // Eliminar foto
-  const eliminarFoto = async () => {
+  const eliminarFoto = () => {
     setModalVisible(false);
-    
+
     if (!user) return;
 
-    Alert.alert(
-      "Eliminar foto",
-      "¿Estás seguro de que quieres eliminar tu foto de perfil?",
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Eliminar",
-          style: "destructive",
-          onPress: async () => {
-            setIsLoading(true);
-            try {
-              await actualizarPerfil(user.uid, { fotoPerfil: "" });
-              setFotoPerfil("");
-              
-              if (profile) {
-                setProfile({ ...profile, fotoPerfil: "" });
+    setTimeout(() => {
+      Alert.alert(
+        "Eliminar foto",
+        "¿Estás seguro de que quieres eliminar tu foto de perfil?",
+        [
+          { text: "Cancelar", style: "cancel" },
+          {
+            text: "Eliminar",
+            style: "destructive",
+            onPress: async () => {
+              setIsLoading(true);
+              try {
+                await actualizarPerfil(user.uid, { fotoPerfil: "" });
+                setFotoPerfil("");
+
+                if (profile) {
+                  setProfile({ ...profile, fotoPerfil: "" });
+                }
+                Alert.alert("Éxito", "Foto eliminada");
+              } catch (error) {
+                Alert.alert("Error", "No se pudo eliminar la foto");
+              } finally {
+                setIsLoading(false);
               }
-            } catch (error) {
-              Alert.alert("Error", "No se pudo eliminar la foto");
-            } finally {
-              setIsLoading(false);
-            }
+            },
           },
-        },
-      ]
-    );
+        ]
+      );
+    }, 300);
   };
 
   const handleGoBack = (): void => {
@@ -229,7 +250,7 @@ const seleccionarDeGaleria = async () => {
       };
 
       await actualizarPerfil(user.uid, datosActualizados);
-      
+
       if (profile) {
         setProfile({ ...profile, ...datosActualizados });
       }
@@ -258,7 +279,11 @@ const seleccionarDeGaleria = async () => {
     return actividadesDisponibles.find((a) => a.id === id);
   };
 
-  const renderActividadIcon = (actividad: ActividadOption, size: number = 24, color?: string) => {
+  const renderActividadIcon = (
+    actividad: ActividadOption,
+    size: number = 24,
+    color?: string
+  ) => {
     const iconColor = color || actividad.color;
 
     if (actividad.iconLibrary === "FontAwesome5") {
@@ -311,17 +336,17 @@ const seleccionarDeGaleria = async () => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             <Text style={styles.modalTitle}>Cambiar foto de perfil</Text>
-            
+
             <TouchableOpacity style={styles.modalOption} onPress={tomarFoto}>
               <MaterialIcons name="camera-alt" size={24} color={COLORS.primary} />
               <Text style={styles.modalOptionText}>Tomar foto</Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity style={styles.modalOption} onPress={seleccionarDeGaleria}>
               <MaterialIcons name="photo-library" size={24} color={COLORS.primary} />
               <Text style={styles.modalOptionText}>Seleccionar de galería</Text>
             </TouchableOpacity>
-            
+
             {fotoPerfil ? (
               <TouchableOpacity style={styles.modalOption} onPress={eliminarFoto}>
                 <MaterialIcons name="delete" size={24} color={COLORS.error} />
@@ -330,7 +355,7 @@ const seleccionarDeGaleria = async () => {
                 </Text>
               </TouchableOpacity>
             ) : null}
-            
+
             <TouchableOpacity
               style={styles.modalCancelButton}
               onPress={() => setModalVisible(false)}
@@ -366,7 +391,7 @@ const seleccionarDeGaleria = async () => {
         {/* Actividad Favorita */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Actividad Favorita</Text>
-          
+
           {isEditing ? (
             <View style={styles.actividadesGrid}>
               {actividadesDisponibles.map((actividad) => (
@@ -771,7 +796,6 @@ const styles = StyleSheet.create({
   bottomSpacing: {
     height: 30,
   },
-  // Modal styles
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
