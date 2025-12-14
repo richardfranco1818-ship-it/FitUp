@@ -8,8 +8,9 @@ import {
   Pressable,
   SafeAreaView,
   StatusBar,
+  ScrollView,
 } from "react-native";
-import { MaterialIcons, FontAwesome5, Entypo } from "@expo/vector-icons";
+import { MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { CommonActions } from "@react-navigation/native";
 import { RootStackParamList } from "../../navigation/StackNavigator";
@@ -25,54 +26,37 @@ interface MenuOption {
   id: string;
   title: string;
   icon: string;
-  iconLibrary: "FontAwesome5" | "MaterialIcons" | "Entypo";
+  iconLibrary: "FontAwesome5" | "MaterialIcons";
   color: string;
-  route?: keyof RootStackParamList;
+  route: keyof RootStackParamList;
 }
 
 const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [menuVisible, setMenuVisible] = useState<boolean>(false);
 
+  // Datos de ejemplo para el progreso (puedes conectar con Firebase después)
+  const progressData = {
+    percentage: 56,
+    currentActivity: "Ciclismo",
+  };
+
+  // Solo 3 actividades: Running, Gym y Ciclismo
   const menuOptions: MenuOption[] = [
     {
       id: "cardio",
-      title: "Cardio",
+      title: "Running",
       icon: "running",
       iconLibrary: "FontAwesome5",
       color: "#2196F3",
-      route: "Activity",
+      route: "Cardio",
     },
     {
-      id: "pesas",
-      title: "Pesas",
+      id: "gym",
+      title: "Gym",
       icon: "dumbbell",
       iconLibrary: "FontAwesome5",
-      color: "#2c842cff",
-      route: "Activity",
-    },
-    {
-      id: "yoga",
-      title: "Yoga",
-      icon: "spa",
-      iconLibrary: "MaterialIcons",
-      color: "#9C27B0",
-      route: "Activity",
-    },
-    {
-      id: "crossfit",
-      title: "CrossFit",
-      icon: "fitness-center",
-      iconLibrary: "MaterialIcons",
-      color: "#FF5722",
-      route: "Activity",
-    },
-    {
-      id: "natacion",
-      title: "Natación",
-      icon: "swimmer",
-      iconLibrary: "FontAwesome5",
-      color: "#00BCD4",
-      route: "Activity",
+      color: "#4CAF50",
+      route: "Gym",
     },
     {
       id: "ciclismo",
@@ -80,7 +64,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       icon: "bicycle",
       iconLibrary: "FontAwesome5",
       color: "#FF9800",
-      route: "Activity",
+      route: "Cycling",
     },
   ];
 
@@ -107,25 +91,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     setMenuVisible(false);
   };
 
- const handleNavigation = (option: MenuOption): void => {
-  // Esta parte se usa para que podamos verificar la opcion elegida por el usuario 
-  if (option.id === "cardio") {
-    navigation.navigate("Cardio");
-    return;
-  }
- 
-  // DESPUÉS el resto - todos van a Activity con parámetros
-  navigation.navigate("Activity", {
-    activityName: option.title,
-    activityIcon: option.icon,
-    activityIconLibrary: option.iconLibrary,
-    activityColor: option.color,
-  });
-};
+  const handleNavigation = (option: MenuOption): void => {
+    navigation.navigate(option.route as any);
+  };
 
   const renderIcon = (option: MenuOption) => {
     const iconProps = {
-      size: 50,
+      size: 28,
       color: option.color,
     };
     switch (option.iconLibrary) {
@@ -133,8 +105,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         return <FontAwesome5 name={option.icon as any} {...iconProps} />;
       case "MaterialIcons":
         return <MaterialIcons name={option.icon as any} {...iconProps} />;
-      case "Entypo":
-        return <Entypo name={option.icon as any} {...iconProps} />;
       default:
         return <MaterialIcons name="help-outline" {...iconProps} />;
     }
@@ -143,17 +113,19 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor={COLORS.primary} barStyle="light-content" />
-      
+
+      {/* Header */}
       <View style={styles.headerBar}>
         <TouchableOpacity style={styles.iconButton} onPress={openMenu}>
           <MaterialIcons name="menu" size={24} color="white" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Inicio</Text>
+        <Text style={styles.headerTitle}>FitUp</Text>
         <TouchableOpacity style={styles.iconButton} onPress={handleProfile}>
           <MaterialIcons name="person" size={24} color="white" />
         </TouchableOpacity>
       </View>
 
+      {/* Modal del menú */}
       <Modal
         animationType="fade"
         transparent={true}
@@ -180,22 +152,44 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         </View>
       </Modal>
 
-      <View style={styles.contentContainer}>
-        <Text style={styles.instructionText}>Cuida tu salud</Text>
-        <View style={styles.gridContainer}>
+      <ScrollView 
+        style={styles.contentContainer}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Tarjeta de Progreso */}
+        <View style={styles.progressCard}>
+          <View style={styles.progressHeader}>
+            <Text style={styles.progressLabel}>Avance de{"\n"}actividad:</Text>
+            <View style={styles.progressValueContainer}>
+              <Text style={styles.progressValue}>{progressData.percentage}%</Text>
+              <TouchableOpacity style={styles.progressButton}>
+                <MaterialIcons name="add" size={16} color={COLORS.text} />
+              </TouchableOpacity>
+            </View>
+          </View>
+          <Text style={styles.currentActivity}>{progressData.currentActivity}</Text>
+        </View>
+
+        {/* Botones de Actividades */}
+        <View style={styles.activitiesContainer}>
           {menuOptions.map((option) => (
             <TouchableOpacity
               key={option.id}
-              style={styles.card}
+              style={styles.activityButton}
               onPress={() => handleNavigation(option)}
               activeOpacity={0.7}
             >
-              {renderIcon(option)}
-              <Text style={styles.cardText}>{option.title}</Text>
+              <View style={styles.activityContent}>
+                <View style={styles.iconWrapper}>
+                  {renderIcon(option)}
+                </View>
+                <Text style={styles.activityText}>{option.title}</Text>
+              </View>
             </TouchableOpacity>
           ))}
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -203,7 +197,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.primary,
   },
   headerBar: {
     flexDirection: "row",
@@ -212,14 +206,6 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     paddingHorizontal: 20,
     paddingVertical: 15,
-    elevation: 4,
-    shadowColor: COLORS.text,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
   },
   headerTitle: {
     fontSize: FONT_SIZES.large,
@@ -234,42 +220,94 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 1,
+    backgroundColor: COLORS.primary,
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
     paddingTop: 20,
+    paddingBottom: 40,
   },
-  instructionText: {
-    fontSize: FONT_SIZES.medium,
-    color: COLORS.textSecondary,
-    textAlign: "center",
-    marginBottom: 30,
-  },
-  gridContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-around",
-    paddingHorizontal: 10,
-  },
-  card: {
-    width: "42%",
+  // Tarjeta de progreso
+  progressCard: {
     backgroundColor: COLORS.surface,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 30,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+  },
+  progressHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
+    paddingBottom: 10,
+  },
+  progressLabel: {
+    fontSize: FONT_SIZES.medium,
+    color: COLORS.text,
+    fontWeight: "500",
+    lineHeight: 22,
+  },
+  progressValueContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  progressValue: {
+    fontSize: FONT_SIZES.large,
+    fontWeight: "bold",
+    color: COLORS.text,
+  },
+  progressButton: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.text,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  currentActivity: {
+    fontSize: FONT_SIZES.small,
+    color: COLORS.textSecondary,
+    marginTop: 10,
+  },
+  // Botones de actividades
+  activitiesContainer: {
+    gap: 16,
+  },
+  activityButton: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 16,
+    paddingVertical: 24,
+    paddingHorizontal: 20,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+  },
+  activityContent: {
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 25,
-    paddingHorizontal: 15,
-    marginBottom: 15,
-    borderRadius: 12,
-    elevation: 3,
-    shadowColor: COLORS.text,
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 5,
+    gap: 12,
   },
-  cardText: {
-    marginTop: 12,
-    fontSize: FONT_SIZES.medium,
-    fontWeight: "600",
+  iconWrapper: {
+    width: 40,
+    alignItems: "center",
+  },
+  activityText: {
+    fontSize: FONT_SIZES.xlarge,
+    fontWeight: "500",
     color: COLORS.text,
-    textAlign: "center",
   },
+  // Modal menu
   menuOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
