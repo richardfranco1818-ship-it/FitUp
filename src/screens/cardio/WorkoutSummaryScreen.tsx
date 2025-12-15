@@ -3,7 +3,7 @@
  * FITUP - Exercise App
  */
 
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -13,16 +13,20 @@ import {
   StatusBar,
   ScrollView,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import { formatTime, formatPace } from "../../utils/cardioUtils";
 import { CardioWorkout } from '../../../types/cardio.types';
+import { saveWorkout } from '../../services/cardioService';
+import { useAuth } from '../../context/AuthContext';
 
 const COLORS = {
   background: "#1a1a2e",
   surface: "#16213e",
   surfaceLight: "#1f3460",
   accent: "#4CAF50",
+  error: "#f44336",
   text: "#ffffff",
   textSecondary: "#a0a0a0",
 };
@@ -41,18 +45,48 @@ const WorkoutSummaryScreen: React.FC<WorkoutSummaryScreenProps> = ({
   route,
 }) => {
   const { workout } = route.params;
+  const { user } = useAuth();
+  const [isSaving, setIsSaving] = useState(false);
 
   const distanceKm = (workout.totalDistance / 1000).toFixed(2);
   const timeFormatted = formatTime(workout.totalDuration);
   const paceFormatted = formatPace(workout.averagePace);
-  const speedKmh = ((workout.totalDistance / 1000) / (workout.totalDuration / 3600)).toFixed(1);
+  const speedKmh = workout.totalDuration > 0 
+    ? ((workout.totalDistance / 1000) / (workout.totalDuration / 3600)).toFixed(1)
+    : "0.0";
 
   const handleSave = async () => {
-    // Aquí guardarías en Firebase
-    // await saveWorkout(db, workout);
-    Alert.alert("¡Guardado!", "Tu entrenamiento ha sido guardado correctamente.", [
-      { text: "OK", onPress: () => navigation.navigate("Home") },
-    ]);
+    if (!user?.uid) {
+      Alert.alert("Error", "No se pudo identificar al usuario");
+      return;
+    }
+
+    setIsSaving(true);
+    
+    try {
+      // Agregar el userId correcto al workout
+      const workoutWithUser = {
+        ...workout,
+        userId: user.uid,
+      };
+
+      await saveWorkout(workoutWithUser);
+      
+      Alert.alert(
+        "¡Guardado!", 
+        "Tu entrenamiento ha sido guardado correctamente.", 
+        [{ text: "OK", onPress: () => navigation.navigate("Home") }]
+      );
+    } catch (error) {
+      console.error("Error al guardar:", error);
+      Alert.alert(
+        "Error", 
+        "No se pudo guardar el entrenamiento. Intenta de nuevo.",
+        [{ text: "OK" }]
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleDiscard = () => {
@@ -70,38 +104,53 @@ const WorkoutSummaryScreen: React.FC<WorkoutSummaryScreenProps> = ({
     );
   };
 
+  // Formatear fecha
+  const workoutDate = new Date(workout.startTime);
+  const dateString = workoutDate.toLocaleDateString('es-MX', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+  const timeString = workoutDate.toLocaleTimeString('es-MX', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor={COLORS.background} barStyle="light-content" />
 
-      <ScrollView contentContainerStyle={styles.content}>
-        {/* Header de felicitación */}
-        <View style={styles.header}>
-          <View style={styles.iconCircle}>
-            <MaterialIcons name="emoji-events" size={48} color="#FFD700" />
-          </View>
-          <Text style={styles.title}>¡Entrenamiento completado!</Text>
-          <Text style={styles.subtitle}>Carrera Libre</Text>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Resumen</Text>
+        <View style={styles.headerSubtitle}>
+          <MaterialIcons name="check-circle" size={24} color={COLORS.accent} />
+          <Text style={styles.completedText}>¡Entrenamiento completado!</Text>
         </View>
+      </View>
 
-        {/* Métricas principales */}
+      <ScrollView 
+        style={styles.content}
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Estadísticas principales */}
         <View style={styles.mainStats}>
-          <View style={styles.mainStatItem}>
-            <FontAwesome5 name="route" size={24} color={COLORS.accent} />
+          <View style={styles.mainStatCard}>
+            <FontAwesome5 name="route" size={28} color={COLORS.accent} />
             <Text style={styles.mainStatValue}>{distanceKm}</Text>
             <Text style={styles.mainStatLabel}>Kilómetros</Text>
           </View>
 
-          <View style={styles.mainStatDivider} />
-
-          <View style={styles.mainStatItem}>
-            <MaterialIcons name="timer" size={28} color={COLORS.accent} />
+          <View style={styles.mainStatCard}>
+            <MaterialIcons name="timer" size={32} color="#2196F3" />
             <Text style={styles.mainStatValue}>{timeFormatted.formatted}</Text>
             <Text style={styles.mainStatLabel}>Tiempo</Text>
           </View>
         </View>
 
-        {/* Métricas secundarias */}
+        {/* Estadísticas secundarias */}
         <View style={styles.secondaryStats}>
           <View style={styles.statCard}>
             <MaterialIcons name="speed" size={24} color="#FF9800" />
@@ -110,50 +159,59 @@ const WorkoutSummaryScreen: React.FC<WorkoutSummaryScreenProps> = ({
           </View>
 
           <View style={styles.statCard}>
-            <MaterialIcons name="directions-run" size={24} color="#2196F3" />
+            <MaterialIcons name="directions-run" size={24} color="#9C27B0" />
             <Text style={styles.statValue}>{speedKmh}</Text>
             <Text style={styles.statLabel}>Velocidad (km/h)</Text>
           </View>
 
           <View style={styles.statCard}>
-            <MaterialIcons name="local-fire-department" size={24} color="#f44336" />
+            <MaterialIcons name="local-fire-department" size={24} color="#F44336" />
             <Text style={styles.statValue}>{workout.caloriesBurned || 0}</Text>
             <Text style={styles.statLabel}>Calorías</Text>
           </View>
 
           <View style={styles.statCard}>
-            <MaterialIcons name="location-on" size={24} color="#9C27B0" />
-            <Text style={styles.statValue}>{workout.route.length}</Text>
+            <MaterialIcons name="location-on" size={24} color="#00BCD4" />
+            <Text style={styles.statValue}>{workout.route?.length || 0}</Text>
             <Text style={styles.statLabel}>Puntos GPS</Text>
           </View>
         </View>
 
         {/* Fecha y hora */}
         <View style={styles.dateContainer}>
-          <MaterialIcons name="event" size={18} color={COLORS.textSecondary} />
-          <Text style={styles.dateText}>
-            {new Date(workout.startTime).toLocaleDateString("es-MX", {
-              weekday: "long",
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </Text>
+          <MaterialIcons name="event" size={20} color={COLORS.textSecondary} />
+          <Text style={styles.dateText}>{dateString}</Text>
+        </View>
+        <View style={styles.dateContainer}>
+          <MaterialIcons name="access-time" size={20} color={COLORS.textSecondary} />
+          <Text style={styles.dateText}>{timeString}</Text>
         </View>
       </ScrollView>
 
       {/* Botones de acción */}
       <View style={styles.actions}>
-        <TouchableOpacity style={styles.discardButton} onPress={handleDiscard}>
+        <TouchableOpacity 
+          style={styles.discardButton} 
+          onPress={handleDiscard}
+          disabled={isSaving}
+        >
           <MaterialIcons name="delete-outline" size={24} color={COLORS.textSecondary} />
           <Text style={styles.discardText}>Descartar</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-          <MaterialIcons name="save" size={24} color={COLORS.text} />
-          <Text style={styles.saveText}>Guardar</Text>
+        <TouchableOpacity 
+          style={[styles.saveButton, isSaving && styles.saveButtonDisabled]} 
+          onPress={handleSave}
+          disabled={isSaving}
+        >
+          {isSaving ? (
+            <ActivityIndicator size="small" color={COLORS.text} />
+          ) : (
+            <>
+              <MaterialIcons name="save" size={24} color={COLORS.text} />
+              <Text style={styles.saveText}>Guardar</Text>
+            </>
+          )}
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -165,47 +223,43 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  content: {
-    padding: 20,
-  },
   header: {
+    padding: 20,
     alignItems: "center",
-    marginBottom: 30,
   },
-  iconCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: COLORS.surface,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 24,
+  headerTitle: {
+    fontSize: 28,
     fontWeight: "bold",
     color: COLORS.text,
+    marginBottom: 8,
   },
-  subtitle: {
+  headerSubtitle: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  completedText: {
     fontSize: 16,
-    color: COLORS.textSecondary,
-    marginTop: 4,
+    color: COLORS.accent,
+    fontWeight: "500",
+  },
+  content: {
+    flex: 1,
+  },
+  contentContainer: {
+    padding: 20,
   },
   mainStats: {
     flexDirection: "row",
+    justifyContent: "space-around",
+    marginBottom: 24,
+  },
+  mainStatCard: {
     backgroundColor: COLORS.surface,
     borderRadius: 20,
     padding: 24,
-    marginBottom: 20,
-  },
-  mainStatItem: {
-    flex: 1,
     alignItems: "center",
-  },
-  mainStatDivider: {
-    width: 1,
-    backgroundColor: COLORS.surfaceLight,
-    marginHorizontal: 16,
+    minWidth: 140,
   },
   mainStatValue: {
     fontSize: 32,
@@ -247,10 +301,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 10,
+    marginTop: 8,
   },
   dateText: {
-    fontSize: 13,
+    fontSize: 14,
     color: COLORS.textSecondary,
     marginLeft: 8,
     textTransform: "capitalize",
@@ -282,6 +336,9 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.accent,
     borderRadius: 12,
     padding: 16,
+  },
+  saveButtonDisabled: {
+    opacity: 0.7,
   },
   saveText: {
     color: COLORS.text,

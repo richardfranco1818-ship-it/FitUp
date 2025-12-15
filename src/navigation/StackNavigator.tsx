@@ -5,28 +5,37 @@ import { createStackNavigator } from "@react-navigation/stack";
 import LoginScreen from "../screens/auth/LoginScreen";
 import HomeScreen from "../screens/home/HomeScreen";
 import ProfileScreen from "../screens/profile/ProfileScreen";
+import RegisterScreen from "../screens/auth/RegisterScreen";
 
 // Pantallas de actividades específicas
 import CardioScreen from "../screens/cardio/CardioScreen";
 import CyclingScreen from "../screens/cycling/CyclingScreen";
 import GymScreen from "../screens/gym/GymScreen";
 
-// Imports de Cardio
+// Sub-pantallas de Cardio
 import FreeRunScreen from "../screens/cardio/FreeRunScreen";
 import WorkoutSummaryScreen from "../screens/cardio/WorkoutSummaryScreen";
 import { CardioWorkout } from '../../types/cardio.types';
+import CardioHistoryScreen from "../screens/cardio/CardioHistoryScreen";
 
+
+
+
+// Definición de tipos para la navegación
 // Definición de tipos para la navegación
 export type RootStackParamList = {
   Login: undefined;
+  Register: undefined; 
   Home: undefined;
   Profile: undefined;
   // Pantallas de actividades
   Cardio: undefined;
   Cycling: undefined;
   Gym: undefined;
+  // Sub-pantallas de Cardio
   FreeRun: undefined;
   WorkoutSummary: { workout: Omit<CardioWorkout, "id"> };
+  CardioHistory: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -56,6 +65,14 @@ const StackNavigator: React.FC = () => {
         }}
       />
 
+      <Stack.Screen
+        name="Register"
+        component={RegisterScreen}
+        options={{
+          headerShown: false,
+      }}
+/>
+
       {/* Pantalla Principal */}
       <Stack.Screen
         name="Home"
@@ -78,7 +95,6 @@ const StackNavigator: React.FC = () => {
 
       {/* ===== PANTALLAS DE ACTIVIDADES ===== */}
       
-      {/* Cardio - Ya configurado */}
       <Stack.Screen
         name="Cardio"
         component={CardioScreen}
@@ -87,7 +103,6 @@ const StackNavigator: React.FC = () => {
         }}
       />
 
-      {/* Ciclismo - Por configurar */}
       <Stack.Screen
         name="Cycling"
         component={CyclingScreen}
@@ -96,10 +111,35 @@ const StackNavigator: React.FC = () => {
         }}
       />
 
-      {/* Gym - Por configurar */}
       <Stack.Screen
         name="Gym"
         component={GymScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+
+      {/* ===== SUB-PANTALLAS DE CARDIO ===== */}
+      
+      <Stack.Screen
+        name="FreeRun"
+        component={FreeRunScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+
+      <Stack.Screen
+        name="WorkoutSummary"
+        component={WorkoutSummaryScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+
+      <Stack.Screen
+        name="CardioHistory"
+        component={CardioHistoryScreen}
         options={{
           headerShown: false,
         }}

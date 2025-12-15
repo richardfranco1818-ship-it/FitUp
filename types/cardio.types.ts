@@ -139,7 +139,7 @@ export interface KilometerSplit {
 export interface CardioWorkout {
   // Identificación
   id?: string;
-  oderId: string;
+  userId: string;
   
   // Tipo y estado
   type: CardioWorkoutType;

@@ -25,45 +25,46 @@ interface HomeScreenProps {
 interface MenuOption {
   id: string;
   title: string;
+  subtitle: string;
   icon: string;
   iconLibrary: "FontAwesome5" | "MaterialIcons";
   color: string;
+  bgColor: string;
   route: keyof RootStackParamList;
 }
 
 const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [menuVisible, setMenuVisible] = useState<boolean>(false);
 
-  // Datos de ejemplo para el progreso (puedes conectar con Firebase después)
-  const progressData = {
-    percentage: 56,
-    currentActivity: "Ciclismo",
-  };
-
-  // Solo 3 actividades: Running, Gym y Ciclismo
   const menuOptions: MenuOption[] = [
     {
       id: "cardio",
       title: "Running",
+      subtitle: "Rastrea tus carreras con GPS",
       icon: "running",
       iconLibrary: "FontAwesome5",
-      color: "#2196F3",
+      color: "#FFFFFF",
+      bgColor: "#2196F3",
       route: "Cardio",
     },
     {
       id: "gym",
       title: "Gym",
+      subtitle: "Entrena tu fuerza",
       icon: "dumbbell",
       iconLibrary: "FontAwesome5",
-      color: "#4CAF50",
+      color: "#FFFFFF",
+      bgColor: "#4CAF50",
       route: "Gym",
     },
     {
       id: "ciclismo",
       title: "Ciclismo",
+      subtitle: "Registra tus rutas",
       icon: "bicycle",
       iconLibrary: "FontAwesome5",
-      color: "#FF9800",
+      color: "#FFFFFF",
+      bgColor: "#FF9800",
       route: "Cycling",
     },
   ];
@@ -95,9 +96,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     navigation.navigate(option.route as any);
   };
 
-  const renderIcon = (option: MenuOption) => {
+  const renderIcon = (option: MenuOption, size: number = 50) => {
     const iconProps = {
-      size: 28,
+      size: size,
       color: option.color,
     };
     switch (option.iconLibrary) {
@@ -157,34 +158,35 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Tarjeta de Progreso */}
-        <View style={styles.progressCard}>
-          <View style={styles.progressHeader}>
-            <Text style={styles.progressLabel}>Avance de{"\n"}actividad:</Text>
-            <View style={styles.progressValueContainer}>
-              <Text style={styles.progressValue}>{progressData.percentage}%</Text>
-              <TouchableOpacity style={styles.progressButton}>
-                <MaterialIcons name="add" size={16} color={COLORS.text} />
-              </TouchableOpacity>
-            </View>
-          </View>
-          <Text style={styles.currentActivity}>{progressData.currentActivity}</Text>
+        {/* Saludo */}
+        <View style={styles.greetingContainer}>
+          <Text style={styles.greetingText}>¡Hola! 👋</Text>
+          <Text style={styles.greetingSubtext}>¿Qué vas a entrenar hoy?</Text>
         </View>
 
-        {/* Botones de Actividades */}
+        {/* Tarjetas de Actividades - Grandes y llamativas */}
         <View style={styles.activitiesContainer}>
           {menuOptions.map((option) => (
             <TouchableOpacity
               key={option.id}
-              style={styles.activityButton}
+              style={[styles.activityCard, { backgroundColor: option.bgColor }]}
               onPress={() => handleNavigation(option)}
-              activeOpacity={0.7}
+              activeOpacity={0.85}
             >
-              <View style={styles.activityContent}>
-                <View style={styles.iconWrapper}>
-                  {renderIcon(option)}
-                </View>
-                <Text style={styles.activityText}>{option.title}</Text>
+              {/* Círculo con icono */}
+              <View style={styles.activityIconCircle}>
+                {renderIcon(option, 55)}
+              </View>
+              
+              {/* Texto */}
+              <View style={styles.activityTextContainer}>
+                <Text style={styles.activityTitle}>{option.title}</Text>
+                <Text style={styles.activitySubtitle}>{option.subtitle}</Text>
+              </View>
+
+              {/* Flecha */}
+              <View style={styles.activityArrow}>
+                <MaterialIcons name="arrow-forward-ios" size={24} color="rgba(255,255,255,0.8)" />
               </View>
             </TouchableOpacity>
           ))}
@@ -208,7 +210,7 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
   },
   headerTitle: {
-    fontSize: FONT_SIZES.large,
+    fontSize: 24,
     fontWeight: "bold",
     color: COLORS.surface,
     flex: 1,
@@ -220,92 +222,69 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 1,
-    backgroundColor: COLORS.primary,
+    backgroundColor: COLORS.background,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: 30,
     paddingBottom: 40,
   },
-  // Tarjeta de progreso
-  progressCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 12,
-    padding: 16,
+  // Saludo
+  greetingContainer: {
     marginBottom: 30,
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
   },
-  progressHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E0E0E0",
-    paddingBottom: 10,
-  },
-  progressLabel: {
-    fontSize: FONT_SIZES.medium,
-    color: COLORS.text,
-    fontWeight: "500",
-    lineHeight: 22,
-  },
-  progressValueContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  progressValue: {
-    fontSize: FONT_SIZES.large,
+  greetingText: {
+    fontSize: 32,
     fontWeight: "bold",
     color: COLORS.text,
   },
-  progressButton: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: COLORS.text,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  currentActivity: {
-    fontSize: FONT_SIZES.small,
+  greetingSubtext: {
+    fontSize: FONT_SIZES.large,
     color: COLORS.textSecondary,
-    marginTop: 10,
+    marginTop: 6,
   },
-  // Botones de actividades
+  // Tarjetas de actividades grandes
   activitiesContainer: {
-    gap: 16,
+    gap: 20,
   },
-  activityButton: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 16,
-    paddingVertical: 24,
-    paddingHorizontal: 20,
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-  },
-  activityContent: {
+  activityCard: {
     flexDirection: "row",
     alignItems: "center",
+    borderRadius: 24,
+    padding: 20,
+    minHeight: 130,
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOpacity: 0.25,
+    shadowOffset: { width: 0, height: 6 },
+    shadowRadius: 10,
+  },
+  activityIconCircle: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: "rgba(255,255,255,0.25)",
     justifyContent: "center",
-    gap: 12,
-  },
-  iconWrapper: {
-    width: 40,
     alignItems: "center",
+    marginRight: 18,
   },
-  activityText: {
-    fontSize: FONT_SIZES.xlarge,
-    fontWeight: "500",
-    color: COLORS.text,
+  activityTextContainer: {
+    flex: 1,
+  },
+  activityTitle: {
+    fontSize: 26,
+    fontWeight: "bold",
+    color: "#FFFFFF",
+    marginBottom: 6,
+  },
+  activitySubtitle: {
+    fontSize: FONT_SIZES.medium,
+    color: "rgba(255,255,255,0.9)",
+  },
+  activityArrow: {
+    marginLeft: 10,
   },
   // Modal menu
   menuOverlay: {

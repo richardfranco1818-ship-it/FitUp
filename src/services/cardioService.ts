@@ -1,18 +1,12 @@
 /**
  * Servicio de Firebase para entrenamientos de Cardio
  * FITUP - Exercise App
- * 
- * NOTA: Debes tener configurado Firebase en tu proyecto.
- * Este archivo asume que ya tienes:
- * - firebase/firebaseConfig.ts con la configuración
- * - Las colecciones necesarias en Firestore
  */
 
 import { 
   collection, 
   doc, 
   addDoc, 
-  updateDoc, 
   deleteDoc, 
   getDoc,
   getDocs, 
@@ -21,16 +15,15 @@ import {
   orderBy, 
   limit,
   Timestamp,
-  DocumentReference,
+  setDoc,
 } from 'firebase/firestore';
-// Importa tu instancia de Firestore
-// import { db } from '../firebase/firebaseConfig';
+
+import { db } from '../config/firebase';
 
 import { 
   CardioWorkout, 
   CardioStats, 
   WorkoutFilters,
-  CardioWorkoutType 
 } from '../../types/cardio.types';
 
 // ==========================================
@@ -41,42 +34,79 @@ const COLLECTION_WORKOUTS = 'cardioWorkouts';
 const COLLECTION_STATS = 'userStats';
 
 // ==========================================
-// TIPOS PARA FIRESTORE
-// ==========================================
-
-interface FirestoreWorkout extends Omit<CardioWorkout, 'id' | 'startTime' | 'endTime' | 'createdAt' | 'updatedAt'> {
-  startTime: Timestamp;
-  endTime?: Timestamp;
-  createdAt: Timestamp;
-  updatedAt?: Timestamp;
-}
-
-// ==========================================
 // FUNCIONES DE CONVERSIÓN
 // ==========================================
 
 /**
  * Convierte un workout local a formato Firestore
+ * Elimina campos undefined que Firestore no acepta
  */
-const toFirestoreWorkout = (workout: Omit<CardioWorkout, 'id'>): FirestoreWorkout => {
-  return {
-    ...workout,
+const toFirestoreWorkout = (workout: Omit<CardioWorkout, 'id'>): Record<string, any> => {
+  const data: Record<string, any> = {
+    userId: workout.userId,
+    type: workout.type,
+    status: workout.status,
     startTime: Timestamp.fromMillis(workout.startTime),
-    endTime: workout.endTime ? Timestamp.fromMillis(workout.endTime) : undefined,
-    createdAt: Timestamp.fromMillis(workout.createdAt),
-    updatedAt: workout.updatedAt ? Timestamp.fromMillis(workout.updatedAt) : undefined,
+    totalDuration: workout.totalDuration || 0,
+    totalDistance: workout.totalDistance || 0,
+    averageSpeed: workout.averageSpeed || 0,
+    averagePace: workout.averagePace || 0,
+    caloriesBurned: workout.caloriesBurned || 0,
+    route: workout.route || [],
+    splits: workout.splits || [],
+    createdAt: Timestamp.fromMillis(workout.createdAt || Date.now()),
   };
+
+  // Solo agregar campos opcionales si tienen valor
+  if (workout.endTime) {
+    data.endTime = Timestamp.fromMillis(workout.endTime);
+  }
+  if (workout.maxSpeed !== undefined && workout.maxSpeed !== null) {
+    data.maxSpeed = workout.maxSpeed;
+  }
+  if (workout.elevationGain !== undefined && workout.elevationGain !== null) {
+    data.elevationGain = workout.elevationGain;
+  }
+  if (workout.elevationLoss !== undefined && workout.elevationLoss !== null) {
+    data.elevationLoss = workout.elevationLoss;
+  }
+  if (workout.notes) {
+    data.notes = workout.notes;
+  }
+  if (workout.rating !== undefined && workout.rating !== null) {
+    data.rating = workout.rating;
+  }
+  if (workout.config) {
+    data.config = workout.config;
+  }
+
+  return data;
 };
 
 /**
  * Convierte un workout de Firestore a formato local
  */
-const fromFirestoreWorkout = (id: string, data: FirestoreWorkout): CardioWorkout => {
+const fromFirestoreWorkout = (id: string, data: Record<string, any>): CardioWorkout => {
   return {
-    ...data,
     id,
+    userId: data.userId,
+    type: data.type,
+    status: data.status,
     startTime: data.startTime.toMillis(),
     endTime: data.endTime?.toMillis(),
+    totalDuration: data.totalDuration,
+    totalDistance: data.totalDistance,
+    averageSpeed: data.averageSpeed,
+    averagePace: data.averagePace,
+    maxSpeed: data.maxSpeed,
+    caloriesBurned: data.caloriesBurned,
+    elevationGain: data.elevationGain,
+    elevationLoss: data.elevationLoss,
+    route: data.route || [],
+    splits: data.splits || [],
+    config: data.config,
+    notes: data.notes,
+    rating: data.rating,
     createdAt: data.createdAt.toMillis(),
     updatedAt: data.updatedAt?.toMillis(),
   };
@@ -88,26 +118,35 @@ const fromFirestoreWorkout = (id: string, data: FirestoreWorkout): CardioWorkout
 
 /**
  * Guarda un nuevo entrenamiento de cardio
- * @param db Instancia de Firestore
- * @param workout Datos del entrenamiento (sin id)
- * @returns ID del documento creado
  */
 export const saveWorkout = async (
-  db: any, // FirebaseFirestore
   workout: Omit<CardioWorkout, 'id'>
 ): Promise<string> => {
   try {
+    console.log('=== GUARDANDO WORKOUT ===');
+    console.log('userId:', workout.userId);
+    console.log('type:', workout.type);
+    console.log('totalDistance:', workout.totalDistance);
+    console.log('totalDuration:', workout.totalDuration);
+    
     const workoutsRef = collection(db, COLLECTION_WORKOUTS);
     const firestoreData = toFirestoreWorkout(workout);
     
+    console.log('Datos preparados para Firestore');
+    
     const docRef = await addDoc(workoutsRef, firestoreData);
     
+    console.log('Workout guardado con ID:', docRef.id);
+    
     // Actualizar estadísticas del usuario
-    await updateUserStats(db, workout.oderId, workout);
+    await updateUserStats(workout.userId, workout);
     
     return docRef.id;
-  } catch (error) {
-    console.error('Error guardando workout:', error);
+  } catch (error: any) {
+    console.error('=== ERROR DETALLADO ===');
+    console.error('Código:', error.code);
+    console.error('Mensaje:', error.message);
+    console.error('Error completo:', error);
     throw new Error('No se pudo guardar el entrenamiento');
   }
 };
@@ -116,7 +155,6 @@ export const saveWorkout = async (
  * Obtiene un entrenamiento por ID
  */
 export const getWorkout = async (
-  db: any,
   workoutId: string
 ): Promise<CardioWorkout | null> => {
   try {
@@ -127,7 +165,7 @@ export const getWorkout = async (
       return null;
     }
     
-    return fromFirestoreWorkout(docSnap.id, docSnap.data() as FirestoreWorkout);
+    return fromFirestoreWorkout(docSnap.id, docSnap.data());
   } catch (error) {
     console.error('Error obteniendo workout:', error);
     throw new Error('No se pudo obtener el entrenamiento');
@@ -138,7 +176,6 @@ export const getWorkout = async (
  * Obtiene todos los entrenamientos de un usuario
  */
 export const getUserWorkouts = async (
-  db: any,
   userId: string,
   filters?: WorkoutFilters,
   maxResults: number = 50
@@ -146,29 +183,26 @@ export const getUserWorkouts = async (
   try {
     const workoutsRef = collection(db, COLLECTION_WORKOUTS);
     
-    // Construir query base
-    let q = query(
+    const q = query(
       workoutsRef,
       where('userId', '==', userId),
       orderBy('startTime', 'desc'),
       limit(maxResults)
     );
     
-    // Aplicar filtros opcionales
-    if (filters?.type) {
-      q = query(q, where('type', '==', filters.type));
-    }
-    
     const querySnapshot = await getDocs(q);
     
     const workouts: CardioWorkout[] = [];
-    querySnapshot.forEach((doc) => {
-      workouts.push(fromFirestoreWorkout(doc.id, doc.data() as FirestoreWorkout));
+    querySnapshot.forEach((docSnap) => {
+      workouts.push(fromFirestoreWorkout(docSnap.id, docSnap.data()));
     });
     
-    // Filtros adicionales en cliente (para fechas y distancia)
+    // Filtros adicionales en cliente
     let filtered = workouts;
     
+    if (filters?.type) {
+      filtered = filtered.filter(w => w.type === filters.type);
+    }
     if (filters?.dateFrom) {
       filtered = filtered.filter(w => w.startTime >= filters.dateFrom!);
     }
@@ -190,43 +224,9 @@ export const getUserWorkouts = async (
 };
 
 /**
- * Actualiza un entrenamiento existente
- */
-export const updateWorkout = async (
-  db: any,
-  workoutId: string,
-  updates: Partial<CardioWorkout>
-): Promise<void> => {
-  try {
-    const docRef = doc(db, COLLECTION_WORKOUTS, workoutId);
-    
-    const updateData: any = {
-      ...updates,
-      updatedAt: Timestamp.now(),
-    };
-    
-    // Convertir timestamps si existen
-    if (updates.startTime) {
-      updateData.startTime = Timestamp.fromMillis(updates.startTime);
-    }
-    if (updates.endTime) {
-      updateData.endTime = Timestamp.fromMillis(updates.endTime);
-    }
-    
-    await updateDoc(docRef, updateData);
-  } catch (error) {
-    console.error('Error actualizando workout:', error);
-    throw new Error('No se pudo actualizar el entrenamiento');
-  }
-};
-
-/**
  * Elimina un entrenamiento
  */
-export const deleteWorkout = async (
-  db: any,
-  workoutId: string
-): Promise<void> => {
+export const deleteWorkout = async (workoutId: string): Promise<void> => {
   try {
     const docRef = doc(db, COLLECTION_WORKOUTS, workoutId);
     await deleteDoc(docRef);
@@ -243,10 +243,7 @@ export const deleteWorkout = async (
 /**
  * Obtiene las estadísticas de cardio de un usuario
  */
-export const getUserStats = async (
-  db: any,
-  userId: string
-): Promise<CardioStats | null> => {
+export const getUserStats = async (userId: string): Promise<CardioStats | null> => {
   try {
     const docRef = doc(db, COLLECTION_STATS, `cardio_${userId}`);
     const docSnap = await getDoc(docRef);
@@ -266,7 +263,6 @@ export const getUserStats = async (
  * Actualiza las estadísticas del usuario después de un entrenamiento
  */
 export const updateUserStats = async (
-  db: any,
   userId: string,
   newWorkout: Omit<CardioWorkout, 'id'>
 ): Promise<void> => {
@@ -290,7 +286,7 @@ export const updateUserStats = async (
         avgPace: 0,
         longestDistance: 0,
         longestDuration: 0,
-        fastestPace: Infinity,
+        fastestPace: 9999, // Usar número alto en lugar de Infinity
         workoutsByType: {},
         currentStreak: 0,
         longestStreak: 0,
@@ -306,7 +302,9 @@ export const updateUserStats = async (
     // Actualizar promedios
     currentStats.avgDistance = currentStats.totalDistance / currentStats.totalWorkouts;
     currentStats.avgDuration = currentStats.totalTime / currentStats.totalWorkouts;
-    currentStats.avgPace = currentStats.totalTime / (currentStats.totalDistance / 1000);
+    if (currentStats.totalDistance > 0) {
+      currentStats.avgPace = currentStats.totalTime / (currentStats.totalDistance / 1000);
+    }
     
     // Actualizar records
     if (newWorkout.totalDistance > currentStats.longestDistance) {
@@ -323,65 +321,27 @@ export const updateUserStats = async (
     const typeCount = currentStats.workoutsByType[newWorkout.type] || 0;
     currentStats.workoutsByType[newWorkout.type] = typeCount + 1;
     
-    // Actualizar racha (simplificado)
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const todayTimestamp = today.getTime();
-    
-    if (currentStats.lastWorkoutDate) {
-      const lastDate = new Date(currentStats.lastWorkoutDate);
-      lastDate.setHours(0, 0, 0, 0);
-      const daysDiff = Math.floor((todayTimestamp - lastDate.getTime()) / (1000 * 60 * 60 * 24));
-      
-      if (daysDiff === 1) {
-        currentStats.currentStreak += 1;
-      } else if (daysDiff > 1) {
-        currentStats.currentStreak = 1;
-      }
-      // Si es el mismo día, no cambia la racha
-    } else {
-      currentStats.currentStreak = 1;
-    }
-    
-    if (currentStats.currentStreak > currentStats.longestStreak) {
-      currentStats.longestStreak = currentStats.currentStreak;
-    }
-    
     currentStats.lastWorkoutDate = newWorkout.startTime;
     
-    // Guardar estadísticas actualizadas
-    await updateDoc(docRef, currentStats as any);
+    // Guardar estadísticas
+    await setDoc(docRef, currentStats);
   } catch (error) {
     console.error('Error actualizando stats:', error);
-    // No lanzar error, las stats son secundarias
   }
 };
-
-// ==========================================
-// UTILIDADES
-// ==========================================
 
 /**
  * Obtiene los entrenamientos de la última semana
  */
-export const getWeeklyWorkouts = async (
-  db: any,
-  userId: string
-): Promise<CardioWorkout[]> => {
+export const getWeeklyWorkouts = async (userId: string): Promise<CardioWorkout[]> => {
   const weekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
-  
-  return getUserWorkouts(db, userId, {
-    dateFrom: weekAgo,
-  });
+  return getUserWorkouts(userId, { dateFrom: weekAgo });
 };
 
 /**
  * Obtiene el último entrenamiento del usuario
  */
-export const getLastWorkout = async (
-  db: any,
-  userId: string
-): Promise<CardioWorkout | null> => {
-  const workouts = await getUserWorkouts(db, userId, undefined, 1);
+export const getLastWorkout = async (userId: string): Promise<CardioWorkout | null> => {
+  const workouts = await getUserWorkouts(userId, undefined, 1);
   return workouts.length > 0 ? workouts[0] : null;
 };
