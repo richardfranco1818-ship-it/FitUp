@@ -17,6 +17,11 @@ import FreeRunScreen from "../screens/cardio/FreeRunScreen";
 import WorkoutSummaryScreen from "../screens/cardio/WorkoutSummaryScreen";
 import { CardioWorkout } from '../../types/cardio.types';
 import CardioHistoryScreen from "../screens/cardio/CardioHistoryScreen";
+// Sub-pantallas de Ciclismo
+import FreeRideScreen from "../screens/cycling/FreeRideScreen";
+import RideSummaryScreen from "../screens/cycling/RideSummaryScreen";
+import CyclingHistoryScreen from "../screens/cycling/CyclingHistoryScreen";
+import { CyclingWorkout } from "../../types/cycling.types";
 
 
 
@@ -36,6 +41,10 @@ export type RootStackParamList = {
   FreeRun: undefined;
   WorkoutSummary: { workout: Omit<CardioWorkout, "id"> };
   CardioHistory: undefined;
+  // Ciclismo
+  FreeRide: undefined;
+  RideSummary: { workout: Omit<CyclingWorkout, "id"> };
+  CyclingHistory: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -144,7 +153,25 @@ const StackNavigator: React.FC = () => {
           headerShown: false,
         }}
       />
+
+      <Stack.Screen
+        name="FreeRide"
+        component={FreeRideScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="RideSummary"
+        component={RideSummaryScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="CyclingHistory"
+        component={CyclingHistoryScreen}
+        options={{ headerShown: false }}
+      />
     </Stack.Navigator>
+
+    
   );
 };
 

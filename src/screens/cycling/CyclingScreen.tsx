@@ -1,3 +1,8 @@
+/**
+ * Pantalla principal de Ciclismo
+ * FITUP - Exercise App
+ */
+
 import React from "react";
 import {
   View,
@@ -9,42 +14,40 @@ import {
   ScrollView,
 } from "react-native";
 import { MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
-import { StackNavigationProp } from "@react-navigation/stack";
-import { RootStackParamList } from "../../navigation/StackNavigator";
-import { COLORS, FONT_SIZES } from "../../../types";
 
-type CyclingScreenNavigationProp = StackNavigationProp<RootStackParamList, "Cycling">;
+const COLORS = {
+  primary: "#0A2647",
+  background: "#f5f5f5",
+  surface: "#ffffff",
+  text: "#000000",
+  textSecondary: "#777777",
+};
 
-interface CyclingScreenProps {
-  navigation: CyclingScreenNavigationProp;
-}
+const FONT_SIZES = {
+  small: 14,
+  medium: 16,
+  large: 18,
+  xlarge: 22,
+};
 
-// Color temático para Ciclismo
 const CYCLING_COLOR = "#FF9800";
 
+interface CyclingScreenProps {
+  navigation: any;
+}
+
 const CyclingScreen: React.FC<CyclingScreenProps> = ({ navigation }) => {
+
   const handleGoBack = (): void => {
     navigation.goBack();
   };
 
-  const handleProfile = (): void => {
-    navigation.navigate("Profile");
+  const handleStartFreeRide = (): void => {
+    navigation.navigate("FreeRide");
   };
 
-  // TODO: Implementar inicio de ruta en bicicleta
-  const handleStartRide = (): void => {
-    // Similar al Free Run, pero para ciclismo
-    console.log("Iniciar ruta en bicicleta");
-  };
-
-  // TODO: Implementar historial de rutas
   const handleHistory = (): void => {
-    console.log("Ver historial de ciclismo");
-  };
-
-  // TODO: Implementar estadísticas de ciclismo
-  const handleStats = (): void => {
-    console.log("Ver estadísticas de ciclismo");
+    navigation.navigate("CyclingHistory");
   };
 
   return (
@@ -57,81 +60,69 @@ const CyclingScreen: React.FC<CyclingScreenProps> = ({ navigation }) => {
           <MaterialIcons name="arrow-back" size={24} color="white" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Ciclismo</Text>
-        <TouchableOpacity style={styles.iconButton} onPress={handleProfile}>
-          <MaterialIcons name="person" size={24} color="white" />
+        <TouchableOpacity style={styles.iconButton} onPress={handleHistory}>
+          <MaterialIcons name="history" size={24} color="white" />
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.contentContainer}>
-        {/* Icono principal */}
-        <View style={styles.iconContainer}>
-          <FontAwesome5 name="bicycle" size={80} color={CYCLING_COLOR} />
-        </View>
-
-        <Text style={styles.activityTitle}>Ciclismo</Text>
-        <Text style={styles.activitySubtitle}>
-          Registra tus rutas y mejora tu rendimiento
-        </Text>
-
-        {/* Tarjeta informativa */}
-        <View style={styles.infoCard}>
-          <MaterialIcons name="info-outline" size={24} color={CYCLING_COLOR} />
-          <Text style={styles.infoText}>
-            Rastrea tus rutas en bicicleta con GPS. Mide distancia, velocidad,
-            elevación y calorías quemadas en cada sesión.
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Hero Section */}
+        <View style={styles.heroSection}>
+          <View style={[styles.heroIcon, { backgroundColor: `${CYCLING_COLOR}20` }]}>
+            <FontAwesome5 name="bicycle" size={50} color={CYCLING_COLOR} />
+          </View>
+          <Text style={styles.heroTitle}>¡A pedalear!</Text>
+          <Text style={styles.heroSubtitle}>
+            Rastrea tu ruta con GPS en tiempo real
           </Text>
         </View>
 
-        {/* Indicador de "Por Configurar" */}
-        <View style={styles.comingSoonCard}>
-          <MaterialIcons name="build" size={32} color={CYCLING_COLOR} />
-          <Text style={styles.comingSoonText}>Módulo en desarrollo</Text>
-          <Text style={styles.comingSoonSubtext}>
-            Pronto podrás rastrear tus rutas en bicicleta
-          </Text>
-        </View>
-
-        {/* Botones de acción */}
-        <View style={styles.actionButtonsContainer}>
-          {/* Botón principal: Iniciar Ruta */}
+        {/* Tarjeta principal - Ruta Libre */}
+        <View style={styles.mainCardContainer}>
           <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: CYCLING_COLOR }]}
-            onPress={handleStartRide}
+            style={styles.mainCard}
+            onPress={handleStartFreeRide}
+            activeOpacity={0.8}
           >
-            <MaterialIcons name="play-arrow" size={24} color="white" />
-            <Text style={styles.actionButtonText}>Iniciar Ruta</Text>
-          </TouchableOpacity>
+            <View style={styles.mainCardIcon}>
+              <FontAwesome5 name="route" size={40} color={CYCLING_COLOR} />
+            </View>
+            
+            <View style={styles.mainCardContent}>
+              <Text style={styles.mainCardTitle}>Ruta Libre</Text>
+              <Text style={styles.mainCardSubtitle}>
+                Pedalea a tu ritmo sin límites
+              </Text>
+            </View>
 
-          {/* Botón secundario: Historial */}
+            <View style={styles.mainCardArrow}>
+              <MaterialIcons name="play-circle-filled" size={48} color={CYCLING_COLOR} />
+            </View>
+          </TouchableOpacity>
+        </View>
+
+        {/* Botón de Historial */}
+        <View style={styles.historyContainer}>
           <TouchableOpacity
-            style={[
-              styles.actionButton,
-              styles.secondaryButton,
-              { borderColor: CYCLING_COLOR },
-            ]}
+            style={styles.historyButton}
             onPress={handleHistory}
+            activeOpacity={0.8}
           >
-            <MaterialIcons name="history" size={24} color={CYCLING_COLOR} />
-            <Text style={[styles.actionButtonText, { color: CYCLING_COLOR }]}>
-              Ver Historial
-            </Text>
-          </TouchableOpacity>
-
-          {/* Botón secundario: Estadísticas */}
-          <TouchableOpacity
-            style={[
-              styles.actionButton,
-              styles.secondaryButton,
-              { borderColor: CYCLING_COLOR },
-            ]}
-            onPress={handleStats}
-          >
-            <MaterialIcons name="show-chart" size={24} color={CYCLING_COLOR} />
-            <Text style={[styles.actionButtonText, { color: CYCLING_COLOR }]}>
-              Estadísticas
-            </Text>
+            <MaterialIcons name="history" size={28} color={CYCLING_COLOR} />
+            <Text style={styles.historyButtonText}>Ver Historial de Rutas</Text>
+            <MaterialIcons name="chevron-right" size={24} color={CYCLING_COLOR} />
           </TouchableOpacity>
         </View>
+
+        {/* Tip del día */}
+        <View style={styles.tipContainer}>
+          <MaterialIcons name="lightbulb-outline" size={24} color="#FFC107" />
+          <Text style={styles.tipText}>
+            Tip: Mantén la app abierta durante tu ruta para un tracking GPS preciso.
+          </Text>
+        </View>
+
+        <View style={styles.bottomSpacer} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -147,8 +138,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     backgroundColor: COLORS.primary,
-    paddingHorizontal: 20,
-    paddingVertical: 15,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     elevation: 4,
     shadowColor: COLORS.text,
     shadowOffset: { width: 0, height: 2 },
@@ -159,105 +150,121 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.large,
     fontWeight: "bold",
     color: COLORS.surface,
-    flex: 1,
-    textAlign: "center",
   },
   iconButton: {
     padding: 8,
     borderRadius: 20,
   },
-  contentContainer: {
+  content: {
     flex: 1,
-    padding: 20,
   },
-  iconContainer: {
+  heroSection: {
     alignItems: "center",
-    marginTop: 30,
-    marginBottom: 20,
+    paddingVertical: 30,
+    paddingHorizontal: 20,
+    backgroundColor: COLORS.surface,
   },
-  activityTitle: {
+  heroIcon: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  heroTitle: {
     fontSize: FONT_SIZES.xlarge,
     fontWeight: "bold",
     color: COLORS.text,
-    textAlign: "center",
     marginBottom: 8,
   },
-  activitySubtitle: {
+  heroSubtitle: {
     fontSize: FONT_SIZES.medium,
     color: COLORS.textSecondary,
     textAlign: "center",
-    marginBottom: 30,
   },
-  infoCard: {
-    flexDirection: "row",
-    backgroundColor: COLORS.surface,
+  mainCardContainer: {
     padding: 16,
-    borderRadius: 12,
-    marginBottom: 20,
-    elevation: 2,
-    shadowColor: COLORS.text,
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 1 },
-    shadowRadius: 3,
   },
-  infoText: {
-    flex: 1,
-    fontSize: FONT_SIZES.small,
-    color: COLORS.text,
-    marginLeft: 12,
-    lineHeight: 20,
-  },
-  comingSoonCard: {
-    backgroundColor: COLORS.surface,
-    padding: 24,
-    borderRadius: 12,
-    marginBottom: 30,
+  mainCard: {
+    flexDirection: "row",
     alignItems: "center",
-    elevation: 2,
-    shadowColor: COLORS.text,
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 1 },
-    shadowRadius: 3,
+    backgroundColor: COLORS.surface,
+    borderRadius: 20,
+    padding: 20,
+    elevation: 4,
+    shadowColor: CYCLING_COLOR,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
     borderLeftWidth: 4,
     borderLeftColor: CYCLING_COLOR,
   },
-  comingSoonText: {
-    fontSize: FONT_SIZES.large,
+  mainCardIcon: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: `${CYCLING_COLOR}15`,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 16,
+  },
+  mainCardContent: {
+    flex: 1,
+  },
+  mainCardTitle: {
+    fontSize: FONT_SIZES.xlarge,
     fontWeight: "bold",
     color: COLORS.text,
-    marginTop: 12,
+    marginBottom: 4,
   },
-  comingSoonSubtext: {
-    fontSize: FONT_SIZES.small,
+  mainCardSubtitle: {
+    fontSize: FONT_SIZES.medium,
     color: COLORS.textSecondary,
-    marginTop: 8,
-    textAlign: "center",
   },
-  actionButtonsContainer: {
-    marginTop: 10,
+  mainCardArrow: {
+    marginLeft: 8,
   },
-  actionButton: {
+  historyContainer: {
+    paddingHorizontal: 16,
+    marginBottom: 16,
+  },
+  historyButton: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    padding: 16,
+    backgroundColor: COLORS.surface,
     borderRadius: 12,
-    marginBottom: 15,
+    padding: 16,
     elevation: 2,
     shadowColor: COLORS.text,
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
-  secondaryButton: {
-    backgroundColor: COLORS.surface,
-    borderWidth: 2,
-  },
-  actionButtonText: {
+  historyButtonText: {
+    flex: 1,
     fontSize: FONT_SIZES.medium,
-    fontWeight: "600",
-    color: "white",
-    marginLeft: 10,
+    fontWeight: "500",
+    color: COLORS.text,
+    marginLeft: 12,
+  },
+  tipContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFF8E1",
+    marginHorizontal: 16,
+    padding: 16,
+    borderRadius: 12,
+  },
+  tipText: {
+    flex: 1,
+    fontSize: FONT_SIZES.small,
+    color: "#5D4037",
+    marginLeft: 12,
+    lineHeight: 20,
+  },
+  bottomSpacer: {
+    height: 30,
   },
 });
 
