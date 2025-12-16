@@ -1,8 +1,3 @@
-/**
- * Pantalla de Carrera Libre (Free Run)
- * FITUP - Exercise App
- */
-
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -20,17 +15,15 @@ import { MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../../navigation/StackNavigator";
 
-// Hooks personalizados
 import { useStopwatch } from "../../hooks/useStopwatch";
 import { useLocationTracking } from "../../hooks/useLocationTracking";
-
-// Utilidades
 import { formatPace } from "../../utils/cardioUtils";
-
-// Tipos
 import { CardioWorkout, WorkoutStatus } from "../../../types/cardio.types";
 
-// Colores para esta pantalla (tema oscuro para running)
+// ==========================================
+// CONFIGURACIÓN
+// ==========================================
+
 const COLORS_DARK = {
   background: "#1a1a2e",
   surface: "#16213e",
@@ -42,30 +35,34 @@ const COLORS_DARK = {
   textSecondary: "#a0a0a0",
 };
 
+// ==========================================
+// TIPOS
+// ==========================================
+
 type FreeRunScreenNavigationProp = StackNavigationProp<RootStackParamList, "FreeRun">;
 
 interface FreeRunScreenProps {
   navigation: FreeRunScreenNavigationProp;
 }
 
+// ==========================================
+// COMPONENTE PRINCIPAL
+// ==========================================
+
 const FreeRunScreen: React.FC<FreeRunScreenProps> = ({ navigation }) => {
   const [workoutStatus, setWorkoutStatus] = useState<WorkoutStatus>("idle");
   const [showFinishModal, setShowFinishModal] = useState<boolean>(false);
   const [startTimestamp, setStartTimestamp] = useState<number>(0);
 
-  // Hook del cronómetro
   const stopwatch = useStopwatch(0, 1000);
-
-  // Hook de tracking GPS
   const locationTracking = useLocationTracking(stopwatch.time);
 
-  // Verificar permisos al montar
   useEffect(() => {
     locationTracking.requestPermission();
   }, []);
 
   // ==========================================
-  // CONTROLES DEL ENTRENAMIENTO
+  // HANDLERS
   // ==========================================
 
   const handleStart = async () => {
@@ -111,24 +108,22 @@ const FreeRunScreen: React.FC<FreeRunScreenProps> = ({ navigation }) => {
     locationTracking.stopTracking();
     setShowFinishModal(false);
 
-    // Preparar datos para guardar
     const workoutData: Omit<CardioWorkout, "id"> = {
-    userId: "", 
-    type: "free_run",
-    status: "completed",
-    startTime: startTimestamp,
-    endTime: Date.now(),
-    totalDuration: stopwatch.time,
-    totalDistance: locationTracking.metrics.totalDistance,
-    averageSpeed: locationTracking.metrics.averageSpeed,
-    averagePace: locationTracking.metrics.averagePace,
-    caloriesBurned: locationTracking.metrics.calories,
-    route: locationTracking.route,
-    splits: [],
-    createdAt: Date.now(),
-};
+      userId: "", 
+      type: "free_run",
+      status: "completed",
+      startTime: startTimestamp,
+      endTime: Date.now(),
+      totalDuration: stopwatch.time,
+      totalDistance: locationTracking.metrics.totalDistance,
+      averageSpeed: locationTracking.metrics.averageSpeed,
+      averagePace: locationTracking.metrics.averagePace,
+      caloriesBurned: locationTracking.metrics.calories,
+      route: locationTracking.route,
+      splits: [],
+      createdAt: Date.now(),
+    };
 
-    // Navegar a pantalla de resumen
     navigation.navigate("WorkoutSummary", { workout: workoutData });
   };
 
@@ -160,7 +155,7 @@ const FreeRunScreen: React.FC<FreeRunScreenProps> = ({ navigation }) => {
   };
 
   // ==========================================
-  // RENDERIZADO
+  // COMPONENTES DE RENDERIZADO
   // ==========================================
 
   const renderMetricCard = (
@@ -177,14 +172,20 @@ const FreeRunScreen: React.FC<FreeRunScreenProps> = ({ navigation }) => {
     </View>
   );
 
-  const { metrics } = locationTracking;
+  // ==========================================
+  // DATOS FORMATEADOS
+  // ==========================================
 
-  // Formatear valores
+  const { metrics } = locationTracking;
   const distanceKm = (metrics.totalDistance / 1000).toFixed(2);
   const speedKmh = metrics.currentSpeedKmh.toFixed(1);
   const currentPaceFormatted = formatPace(metrics.currentPace);
   const avgPaceFormatted = formatPace(metrics.averagePace);
   const calories = metrics.calories?.toString() || "0";
+
+  // ==========================================
+  // RENDER
+  // ==========================================
 
   return (
     <SafeAreaView style={styles.container}>
@@ -361,6 +362,10 @@ const FreeRunScreen: React.FC<FreeRunScreenProps> = ({ navigation }) => {
     </SafeAreaView>
   );
 };
+
+// ==========================================
+// ESTILOS
+// ==========================================
 
 const styles = StyleSheet.create({
   container: {
