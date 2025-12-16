@@ -1,7 +1,3 @@
-/**
- * Pantalla de Resumen del Entrenamiento
- * FITUP - Exercise App
- */
 
 import React, { useState } from "react";
 import {

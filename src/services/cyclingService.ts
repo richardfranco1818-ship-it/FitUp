@@ -1,8 +1,3 @@
-/**
- * Servicio de Firebase para entrenamientos de Ciclismo
- * FITUP - Exercise App
- */
-
 import { 
   collection, 
   doc, 

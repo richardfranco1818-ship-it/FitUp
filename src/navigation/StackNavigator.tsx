@@ -24,10 +24,6 @@ import CyclingHistoryScreen from "../screens/cycling/CyclingHistoryScreen";
 import { CyclingWorkout } from "../../types/cycling.types";
 
 
-
-
-// Definición de tipos para la navegación
-// Definición de tipos para la navegación
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined; 
@@ -64,7 +60,7 @@ const StackNavigator: React.FC = () => {
         },
       }}
     >
-      {/* Pantalla de Login */}
+
       <Stack.Screen
         name="Login"
         component={LoginScreen}
@@ -82,7 +78,7 @@ const StackNavigator: React.FC = () => {
       }}
 />
 
-      {/* Pantalla Principal */}
+
       <Stack.Screen
         name="Home"
         component={HomeScreen}
@@ -93,7 +89,7 @@ const StackNavigator: React.FC = () => {
         }}
       />
 
-      {/* Perfil de Usuario */}
+
       <Stack.Screen
         name="Profile"
         component={ProfileScreen}
@@ -102,7 +98,7 @@ const StackNavigator: React.FC = () => {
         }}
       />
 
-      {/* ===== PANTALLAS DE ACTIVIDADES ===== */}
+
       
       <Stack.Screen
         name="Cardio"
@@ -128,7 +124,7 @@ const StackNavigator: React.FC = () => {
         }}
       />
 
-      {/* ===== SUB-PANTALLAS DE CARDIO ===== */}
+  
       
       <Stack.Screen
         name="FreeRun"

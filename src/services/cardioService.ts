@@ -1,8 +1,3 @@
-/**
- * Servicio de Firebase para entrenamientos de Cardio
- * FITUP - Exercise App
- */
-
 import { 
   collection, 
   doc, 
@@ -25,22 +20,9 @@ import {
   CardioStats, 
   WorkoutFilters,
 } from '../../types/cardio.types';
-
-// ==========================================
-// CONSTANTES
-// ==========================================
-
 const COLLECTION_WORKOUTS = 'cardioWorkouts';
 const COLLECTION_STATS = 'userStats';
 
-// ==========================================
-// FUNCIONES DE CONVERSIÓN
-// ==========================================
-
-/**
- * Convierte un workout local a formato Firestore
- * Elimina campos undefined que Firestore no acepta
- */
 const toFirestoreWorkout = (workout: Omit<CardioWorkout, 'id'>): Record<string, any> => {
   const data: Record<string, any> = {
     userId: workout.userId,
@@ -83,9 +65,9 @@ const toFirestoreWorkout = (workout: Omit<CardioWorkout, 'id'>): Record<string, 
   return data;
 };
 
-/**
- * Convierte un workout de Firestore a formato local
- */
+
+ //Convierte un workout de Firestore a formato local
+ 
 const fromFirestoreWorkout = (id: string, data: Record<string, any>): CardioWorkout => {
   return {
     id,
@@ -112,13 +94,9 @@ const fromFirestoreWorkout = (id: string, data: Record<string, any>): CardioWork
   };
 };
 
-// ==========================================
-// CRUD DE ENTRENAMIENTOS
-// ==========================================
 
-/**
- * Guarda un nuevo entrenamiento de cardio
- */
+ //Guarda un nuevo entrenamiento de cardio
+ 
 export const saveWorkout = async (
   workout: Omit<CardioWorkout, 'id'>
 ): Promise<string> => {
@@ -151,9 +129,8 @@ export const saveWorkout = async (
   }
 };
 
-/**
- * Obtiene un entrenamiento por ID
- */
+ //Obtiene un entrenamiento por ID
+ 
 export const getWorkout = async (
   workoutId: string
 ): Promise<CardioWorkout | null> => {
@@ -172,9 +149,8 @@ export const getWorkout = async (
   }
 };
 
-/**
- * Obtiene todos los entrenamientos de un usuario
- */
+//Obtiene todos los entrenamientos de un usuario
+
 export const getUserWorkouts = async (
   userId: string,
   filters?: WorkoutFilters,
@@ -223,9 +199,9 @@ export const getUserWorkouts = async (
   }
 };
 
-/**
- * Elimina un entrenamiento
- */
+
+ //Elimina un entrenamiento
+ 
 export const deleteWorkout = async (workoutId: string): Promise<void> => {
   try {
     const docRef = doc(db, COLLECTION_WORKOUTS, workoutId);
@@ -236,13 +212,10 @@ export const deleteWorkout = async (workoutId: string): Promise<void> => {
   }
 };
 
-// ==========================================
-// ESTADÍSTICAS DEL USUARIO
-// ==========================================
 
-/**
- * Obtiene las estadísticas de cardio de un usuario
- */
+// ESTADÍSTICAS DEL USUARIO
+//Obtiene las estadísticas de cardio de un usuario
+ 
 export const getUserStats = async (userId: string): Promise<CardioStats | null> => {
   try {
     const docRef = doc(db, COLLECTION_STATS, `cardio_${userId}`);
@@ -259,9 +232,9 @@ export const getUserStats = async (userId: string): Promise<CardioStats | null> 
   }
 };
 
-/**
- * Actualiza las estadísticas del usuario después de un entrenamiento
- */
+
+ //Actualiza las estadísticas del usuario después de un entrenamiento
+ 
 export const updateUserStats = async (
   userId: string,
   newWorkout: Omit<CardioWorkout, 'id'>

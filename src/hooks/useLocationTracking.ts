@@ -1,8 +1,3 @@
-/**
- * Hook personalizado para tracking de ubicación GPS
- * FITUP - Exercise App
- */
-
 import { useState, useRef, useCallback, useEffect } from 'react';
 import * as Location from 'expo-location';
 import { 
@@ -18,16 +13,17 @@ import {
   estimateCalories,
 } from '../utils/cardioUtils';
 
+// ==========================================
+// TIPOS E INTERFACES
+// ==========================================
+
 export interface UseLocationTrackingReturn {
-  // Estado
   currentLocation: GeoCoordinate | null;
   metrics: CurrentMetrics;
   route: RoutePoint[];
   isTracking: boolean;
   hasPermission: boolean | null;
   error: string | null;
-  
-  // Controles
   requestPermission: () => Promise<boolean>;
   startTracking: () => Promise<void>;
   stopTracking: () => void;
@@ -38,19 +34,24 @@ export interface UseLocationTrackingReturn {
 
 interface UseLocationTrackingOptions {
   accuracy?: Location.Accuracy;
-  timeInterval?: number; // ms entre actualizaciones
-  distanceInterval?: number; // metros mínimos para actualizar
+  timeInterval?: number;
+  distanceInterval?: number;
 }
+
+// ==========================================
+// CONFIGURACIÓN
+// ==========================================
 
 const DEFAULT_OPTIONS: UseLocationTrackingOptions = {
   accuracy: Location.Accuracy.BestForNavigation,
-  timeInterval: 1000, // cada segundo
-  distanceInterval: 5, // cada 5 metros
+  timeInterval: 1000,
+  distanceInterval: 5,
 };
 
-/**
- * Hook para tracking de ubicación GPS con métricas de running
- */
+// ==========================================
+// HOOK PRINCIPAL
+// ==========================================
+
 export const useLocationTracking = (
   elapsedTime: number = 0,
   options: UseLocationTrackingOptions = {}
@@ -73,9 +74,10 @@ export const useLocationTracking = (
   const subscriptionRef = useRef<Location.LocationSubscription | null>(null);
   const lastLocationRef = useRef<GeoCoordinate | null>(null);
 
-  /**
-   * Solicitar permisos de ubicación
-   */
+  // ==========================================
+  // PERMISOS
+  // ==========================================
+
   const requestPermission = useCallback(async (): Promise<boolean> => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -94,9 +96,10 @@ export const useLocationTracking = (
     }
   }, []);
 
-  /**
-   * Procesar nueva ubicación
-   */
+  // ==========================================
+  // PROCESAMIENTO DE UBICACIÓN
+  // ==========================================
+
   const handleLocationUpdate = useCallback((location: Location.LocationObject) => {
     const newCoord: GeoCoordinate = {
       latitude: location.coords.latitude,
@@ -108,29 +111,24 @@ export const useLocationTracking = (
       timestamp: location.timestamp,
     };
 
-    // Validar coordenada
     if (!isValidCoordinate(newCoord)) {
       return;
     }
 
     setCurrentLocation(newCoord);
 
-    // Calcular distancia desde el último punto
     let distanceFromLast = 0;
     if (lastLocationRef.current) {
       distanceFromLast = calculateDistance(lastLocationRef.current, newCoord);
       
-      // Filtrar saltos irreales (> 100m en 1 segundo sugiere error GPS)
       if (distanceFromLast > 100) {
         return;
       }
     }
 
-    // Actualizar distancia total
     setTotalDistance(prev => {
       const newTotal = prev + distanceFromLast;
       
-      // Crear punto de ruta
       const routePoint: RoutePoint = {
         ...newCoord,
         distanceFromStart: newTotal,
@@ -143,7 +141,6 @@ export const useLocationTracking = (
       return newTotal;
     });
 
-    // Actualizar velocidad máxima
     if (newCoord.speed && newCoord.speed > maxSpeed) {
       setMaxSpeed(newCoord.speed);
     }
@@ -151,11 +148,11 @@ export const useLocationTracking = (
     lastLocationRef.current = newCoord;
   }, [elapsedTime, maxSpeed]);
 
-  /**
-   * Iniciar tracking de ubicación
-   */
+  // ==========================================
+  // CONTROLES DE TRACKING
+  // ==========================================
+
   const startTracking = useCallback(async () => {
-    // Verificar permisos
     if (hasPermission === null) {
       const granted = await requestPermission();
       if (!granted) return;
@@ -169,14 +166,12 @@ export const useLocationTracking = (
     setIsPaused(false);
 
     try {
-      // Obtener ubicación inicial
       const initialLocation = await Location.getCurrentPositionAsync({
         accuracy: mergedOptions.accuracy,
       });
       
       handleLocationUpdate(initialLocation);
 
-      // Iniciar suscripción a actualizaciones
       subscriptionRef.current = await Location.watchPositionAsync(
         {
           accuracy: mergedOptions.accuracy,
@@ -191,9 +186,6 @@ export const useLocationTracking = (
     }
   }, [hasPermission, requestPermission, handleLocationUpdate, mergedOptions]);
 
-  /**
-   * Detener tracking
-   */
   const stopTracking = useCallback(() => {
     if (subscriptionRef.current) {
       subscriptionRef.current.remove();
@@ -203,9 +195,6 @@ export const useLocationTracking = (
     setIsPaused(false);
   }, []);
 
-  /**
-   * Pausar tracking
-   */
   const pauseTracking = useCallback(() => {
     if (subscriptionRef.current) {
       subscriptionRef.current.remove();
@@ -215,9 +204,6 @@ export const useLocationTracking = (
     setIsTracking(false);
   }, []);
 
-  /**
-   * Reanudar tracking
-   */
   const resumeTracking = useCallback(async () => {
     if (!isPaused) return;
     
@@ -239,9 +225,6 @@ export const useLocationTracking = (
     }
   }, [isPaused, handleLocationUpdate, mergedOptions]);
 
-  /**
-   * Reiniciar tracking (limpiar datos)
-   */
   const resetTracking = useCallback(() => {
     stopTracking();
     setCurrentLocation(null);
@@ -252,7 +235,10 @@ export const useLocationTracking = (
     lastLocationRef.current = null;
   }, [stopTracking]);
 
-  // Limpiar al desmontar
+  // ==========================================
+  // CLEANUP Y MÉTRICAS
+  // ==========================================
+
   useEffect(() => {
     return () => {
       if (subscriptionRef.current) {
@@ -261,16 +247,11 @@ export const useLocationTracking = (
     };
   }, []);
 
-  // Calcular métricas actuales
   const currentSpeed = currentLocation?.speed ?? 0;
   const currentSpeedKmh = msToKmh(currentSpeed);
   const currentPace = speedToPace(currentSpeed);
-  
-  // Velocidad y ritmo promedio
   const averageSpeed = elapsedTime > 0 ? totalDistance / elapsedTime : 0;
   const averagePace = speedToPace(averageSpeed);
-  
-  // Calorías estimadas
   const calories = estimateCalories(totalDistance, elapsedTime);
 
   const metrics: CurrentMetrics = {

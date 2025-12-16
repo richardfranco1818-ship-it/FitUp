@@ -1,8 +1,3 @@
-/**
- * Pantalla de Resumen de Ruta - Ciclismo
- * FITUP - Exercise App
- */
-
 import React, { useState } from "react";
 import {
   View,
@@ -129,7 +124,7 @@ const RideSummaryScreen: React.FC<RideSummaryScreenProps> = ({
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
-        {/* Estadísticas principales */}
+     
         <View style={styles.mainStats}>
           <View style={styles.mainStatCard}>
             <FontAwesome5 name="route" size={28} color={COLORS.accent} />
@@ -144,7 +139,6 @@ const RideSummaryScreen: React.FC<RideSummaryScreenProps> = ({
           </View>
         </View>
 
-        {/* Estadísticas secundarias */}
         <View style={styles.secondaryStats}>
           <View style={styles.statCard}>
             <MaterialIcons name="speed" size={24} color={COLORS.accent} />
@@ -171,7 +165,7 @@ const RideSummaryScreen: React.FC<RideSummaryScreenProps> = ({
           </View>
         </View>
 
-        {/* Fecha y hora */}
+
         <View style={styles.dateContainer}>
           <MaterialIcons name="event" size={20} color={COLORS.textSecondary} />
           <Text style={styles.dateText}>{dateString}</Text>
@@ -182,7 +176,7 @@ const RideSummaryScreen: React.FC<RideSummaryScreenProps> = ({
         </View>
       </ScrollView>
 
-      {/* Botones de acción */}
+  
       <View style={styles.actions}>
         <TouchableOpacity 
           style={styles.discardButton} 

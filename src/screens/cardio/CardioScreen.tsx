@@ -1,8 +1,3 @@
-/**
- * Pantalla principal de Cardio
- * FITUP - Exercise App
- */
-
 import React from "react";
 import {
   View,

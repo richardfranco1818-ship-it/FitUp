@@ -1,8 +1,3 @@
-/**
- * Pantalla de Historial de Ciclismo
- * FITUP - Exercise App
- */
-
 import React, { useState, useEffect } from "react";
 import {
   View,

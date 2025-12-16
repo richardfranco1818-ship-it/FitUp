@@ -1,7 +1,3 @@
-/**
- * Pantalla de Ruta Libre - Ciclismo
- * FITUP - Exercise App
- */
 
 import React, { useState, useEffect } from "react";
 import {
@@ -157,7 +153,7 @@ const FreeRideScreen: React.FC<FreeRideScreenProps> = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor={COLORS.background} barStyle="light-content" />
 
-      {/* Header */}
+
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
           <MaterialIcons name="arrow-back" size={24} color={COLORS.text} />
@@ -177,7 +173,7 @@ const FreeRideScreen: React.FC<FreeRideScreenProps> = ({ navigation }) => {
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
-        {/* Estado */}
+   
         <View style={styles.statusContainer}>
           <View
             style={[
@@ -204,13 +200,13 @@ const FreeRideScreen: React.FC<FreeRideScreenProps> = ({ navigation }) => {
           </View>
         </View>
 
-        {/* Tiempo principal */}
+
         <View style={styles.timerContainer}>
           <Text style={styles.timerText}>{timeFormatted.formatted}</Text>
           <Text style={styles.timerLabel}>Tiempo</Text>
         </View>
 
-        {/* Métricas */}
++
         <View style={styles.metricsGrid}>
           <View style={styles.metricCard}>
             <FontAwesome5 name="route" size={20} color={COLORS.accent} />
@@ -241,7 +237,7 @@ const FreeRideScreen: React.FC<FreeRideScreenProps> = ({ navigation }) => {
           </View>
         </View>
 
-        {/* Controles */}
+   
         <View style={styles.controlsContainer}>
           {workoutStatus === "idle" && (
             <TouchableOpacity
@@ -295,7 +291,7 @@ const FreeRideScreen: React.FC<FreeRideScreenProps> = ({ navigation }) => {
         </View>
       </ScrollView>
 
-      {/* Modal de confirmación */}
+ 
       <Modal
         visible={showFinishModal}
         transparent={true}

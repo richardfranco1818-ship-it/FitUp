@@ -1,8 +1,3 @@
-/**
- * Pantalla principal de Ciclismo
- * FITUP - Exercise App
- */
-
 import React from "react";
 import {
   View,
@@ -54,7 +49,6 @@ const CyclingScreen: React.FC<CyclingScreenProps> = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor={COLORS.primary} barStyle="light-content" />
 
-      {/* Header */}
       <View style={styles.headerBar}>
         <TouchableOpacity style={styles.iconButton} onPress={handleGoBack}>
           <MaterialIcons name="arrow-back" size={24} color="white" />
@@ -66,7 +60,7 @@ const CyclingScreen: React.FC<CyclingScreenProps> = ({ navigation }) => {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Hero Section */}
+ 
         <View style={styles.heroSection}>
           <View style={[styles.heroIcon, { backgroundColor: `${CYCLING_COLOR}20` }]}>
             <FontAwesome5 name="bicycle" size={50} color={CYCLING_COLOR} />
@@ -77,7 +71,7 @@ const CyclingScreen: React.FC<CyclingScreenProps> = ({ navigation }) => {
           </Text>
         </View>
 
-        {/* Tarjeta principal - Ruta Libre */}
+      
         <View style={styles.mainCardContainer}>
           <TouchableOpacity
             style={styles.mainCard}
@@ -101,7 +95,7 @@ const CyclingScreen: React.FC<CyclingScreenProps> = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Botón de Historial */}
+  
         <View style={styles.historyContainer}>
           <TouchableOpacity
             style={styles.historyButton}
@@ -114,7 +108,7 @@ const CyclingScreen: React.FC<CyclingScreenProps> = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Tip del día */}
+  
         <View style={styles.tipContainer}>
           <MaterialIcons name="lightbulb-outline" size={24} color="#FFC107" />
           <Text style={styles.tipText}>

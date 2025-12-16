@@ -113,19 +113,19 @@ const FreeRunScreen: React.FC<FreeRunScreenProps> = ({ navigation }) => {
 
     // Preparar datos para guardar
     const workoutData: Omit<CardioWorkout, "id"> = {
-  userId: "", // Se asignará en WorkoutSummaryScreen con el uid real
-  type: "free_run",
-  status: "completed",
-  startTime: startTimestamp,
-  endTime: Date.now(),
-  totalDuration: stopwatch.time,
-  totalDistance: locationTracking.metrics.totalDistance,
-  averageSpeed: locationTracking.metrics.averageSpeed,
-  averagePace: locationTracking.metrics.averagePace,
-  caloriesBurned: locationTracking.metrics.calories,
-  route: locationTracking.route,
-  splits: [],
-  createdAt: Date.now(),
+    userId: "", 
+    type: "free_run",
+    status: "completed",
+    startTime: startTimestamp,
+    endTime: Date.now(),
+    totalDuration: stopwatch.time,
+    totalDistance: locationTracking.metrics.totalDistance,
+    averageSpeed: locationTracking.metrics.averageSpeed,
+    averagePace: locationTracking.metrics.averagePace,
+    caloriesBurned: locationTracking.metrics.calories,
+    route: locationTracking.route,
+    splits: [],
+    createdAt: Date.now(),
 };
 
     // Navegar a pantalla de resumen

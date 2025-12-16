@@ -115,7 +115,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor={COLORS.primary} barStyle="light-content" />
 
-      {/* Header */}
+
       <View style={styles.headerBar}>
         <TouchableOpacity style={styles.iconButton} onPress={openMenu}>
           <MaterialIcons name="menu" size={24} color="white" />
@@ -126,7 +126,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Modal del menú */}
+    
       <Modal
         animationType="fade"
         transparent={true}
@@ -158,13 +158,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Saludo */}
+   
         <View style={styles.greetingContainer}>
           <Text style={styles.greetingText}>¡Hola! 👋</Text>
           <Text style={styles.greetingSubtext}>¿Qué vas a entrenar hoy?</Text>
         </View>
 
-        {/* Tarjetas de Actividades - Grandes y llamativas */}
+      
         <View style={styles.activitiesContainer}>
           {menuOptions.map((option) => (
             <TouchableOpacity
@@ -173,18 +173,18 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               onPress={() => handleNavigation(option)}
               activeOpacity={0.85}
             >
-              {/* Círculo con icono */}
+          
               <View style={styles.activityIconCircle}>
                 {renderIcon(option, 55)}
               </View>
               
-              {/* Texto */}
+             
               <View style={styles.activityTextContainer}>
                 <Text style={styles.activityTitle}>{option.title}</Text>
                 <Text style={styles.activitySubtitle}>{option.subtitle}</Text>
               </View>
 
-              {/* Flecha */}
+           
               <View style={styles.activityArrow}>
                 <MaterialIcons name="arrow-forward-ios" size={24} color="rgba(255,255,255,0.8)" />
               </View>
@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     marginTop: 6,
   },
-  // Tarjetas de actividades grandes
+  // Tarjetas de actividades 
   activitiesContainer: {
     gap: 20,
   },

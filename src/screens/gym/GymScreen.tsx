@@ -19,7 +19,6 @@ interface GymScreenProps {
   navigation: GymScreenNavigationProp;
 }
 
-// Color temático para Gym
 const GYM_COLOR = "#4CAF50";
 
 const GymScreen: React.FC<GymScreenProps> = ({ navigation }) => {
@@ -31,27 +30,26 @@ const GymScreen: React.FC<GymScreenProps> = ({ navigation }) => {
     navigation.navigate("Profile");
   };
 
-  // TODO: Implementar inicio de entrenamiento
+
   const handleStartWorkout = (): void => {
     console.log("Iniciar entrenamiento de gym");
   };
 
-  // TODO: Implementar lista de ejercicios
+ 
   const handleExercises = (): void => {
     console.log("Ver lista de ejercicios");
   };
 
-  // TODO: Implementar rutinas predefinidas
   const handleRoutines = (): void => {
     console.log("Ver rutinas predefinidas");
   };
 
-  // TODO: Implementar historial
+
   const handleHistory = (): void => {
     console.log("Ver historial de gym");
   };
 
-  // TODO: Implementar estadísticas
+
   const handleStats = (): void => {
     console.log("Ver estadísticas de gym");
   };
@@ -60,7 +58,7 @@ const GymScreen: React.FC<GymScreenProps> = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor={COLORS.primary} barStyle="light-content" />
 
-      {/* Header */}
+    
       <View style={styles.headerBar}>
         <TouchableOpacity style={styles.iconButton} onPress={handleGoBack}>
           <MaterialIcons name="arrow-back" size={24} color="white" />
@@ -72,7 +70,7 @@ const GymScreen: React.FC<GymScreenProps> = ({ navigation }) => {
       </View>
 
       <ScrollView style={styles.contentContainer}>
-        {/* Icono principal */}
+   
         <View style={styles.iconContainer}>
           <FontAwesome5 name="dumbbell" size={80} color={GYM_COLOR} />
         </View>
@@ -82,7 +80,7 @@ const GymScreen: React.FC<GymScreenProps> = ({ navigation }) => {
           Entrena con pesas y desarrolla tu fuerza
         </Text>
 
-        {/* Tarjeta informativa */}
+    
         <View style={styles.infoCard}>
           <MaterialIcons name="info-outline" size={24} color={GYM_COLOR} />
           <Text style={styles.infoText}>
@@ -91,7 +89,7 @@ const GymScreen: React.FC<GymScreenProps> = ({ navigation }) => {
           </Text>
         </View>
 
-        {/* Indicador de "Por Configurar" */}
+      
         <View style={styles.comingSoonCard}>
           <MaterialIcons name="build" size={32} color={GYM_COLOR} />
           <Text style={styles.comingSoonText}>Módulo en desarrollo</Text>
@@ -100,9 +98,9 @@ const GymScreen: React.FC<GymScreenProps> = ({ navigation }) => {
           </Text>
         </View>
 
-        {/* Botones de acción */}
+     
         <View style={styles.actionButtonsContainer}>
-          {/* Botón principal: Iniciar Entrenamiento */}
+  
           <TouchableOpacity
             style={[styles.actionButton, { backgroundColor: GYM_COLOR }]}
             onPress={handleStartWorkout}
@@ -111,7 +109,7 @@ const GymScreen: React.FC<GymScreenProps> = ({ navigation }) => {
             <Text style={styles.actionButtonText}>Iniciar Entrenamiento</Text>
           </TouchableOpacity>
 
-          {/* Botón: Ejercicios */}
+       
           <TouchableOpacity
             style={[
               styles.actionButton,
@@ -126,7 +124,7 @@ const GymScreen: React.FC<GymScreenProps> = ({ navigation }) => {
             </Text>
           </TouchableOpacity>
 
-          {/* Botón: Rutinas */}
+          
           <TouchableOpacity
             style={[
               styles.actionButton,
@@ -141,7 +139,7 @@ const GymScreen: React.FC<GymScreenProps> = ({ navigation }) => {
             </Text>
           </TouchableOpacity>
 
-          {/* Botón: Historial */}
+         
           <TouchableOpacity
             style={[
               styles.actionButton,
@@ -156,7 +154,6 @@ const GymScreen: React.FC<GymScreenProps> = ({ navigation }) => {
             </Text>
           </TouchableOpacity>
 
-          {/* Botón: Estadísticas */}
           <TouchableOpacity
             style={[
               styles.actionButton,

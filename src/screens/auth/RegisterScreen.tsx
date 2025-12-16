@@ -130,7 +130,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
             </Text>
 
             <View style={styles.formContainer}>
-              {/* Datos de cuenta */}
+            
               <Text style={styles.sectionTitle}>Datos de cuenta</Text>
               
               <Text style={styles.label}>Nombre</Text>
@@ -178,7 +178,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
                 editable={!isLoading}
               />
 
-              {/* Datos físicos */}
+             
               <Text style={styles.sectionTitle}>Datos físicos</Text>
 
               <View style={styles.rowInputs}>
@@ -219,7 +219,6 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
                 editable={!isLoading}
               />
 
-              {/* Actividad favorita */}
               <Text style={styles.sectionTitle}>Actividad favorita</Text>
               <Text style={styles.sublabel}>Selecciona tu deporte preferido</Text>
 

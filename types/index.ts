@@ -1,22 +1,11 @@
-/**
- * Archivo central para todos los tipos TypeScript de FitUp
- * Tipos e interfaces para la aplicación de ejercicio
- */
-
 // ==========================================
 // TIPOS BÁSICOS DE LA APLICACIÓN
 // ==========================================
 
 export type ID = number;
 
-/**
- * Tipos de actividad física disponibles
- */
 export type TipoActividad = "cardio" | "pesas" | "yoga" | "crossfit" | "natacion" | "ciclismo";
 
-/**
- * Objetivos de fitness del usuario
- */
 export type ObjetivoFitness = "perder_peso" | "ganar_musculo" | "mantenerse" | "resistencia";
 
 // ==========================================
@@ -27,51 +16,39 @@ export interface BaseEntity {
   id: ID;
 }
 
-/**
- * Perfil del usuario
- */
 export interface Usuario extends BaseEntity {
   nombre: string;
   email?: string;
   telefono?: string;
-  peso?: number;      // kg
-  altura?: number;    // cm
+  peso?: number;
+  altura?: number;
   edad?: number;
   objetivo?: ObjetivoFitness;
   fotoPerfil?: string;
 }
 
-/**
- * Ejercicio individual
- */
 export interface Ejercicio extends BaseEntity {
   nombre: string;
   tipo: TipoActividad;
   series?: number;
   repeticiones?: number;
-  peso?: number;        // kg
-  duracion?: number;    // minutos
-  descanso?: number;    // segundos
+  peso?: number;
+  duracion?: number;
+  descanso?: number;
   descripcion?: string;
 }
 
-/**
- * Entrenamiento (sesión completa)
- */
 export interface Entrenamiento extends BaseEntity {
   nombre: string;
   tipo: TipoActividad;
   fecha: string;
-  duracion: number;     // minutos
+  duracion: number;
   calorias?: number;
   ejercicios?: Ejercicio[];
   notas?: string;
   completado: boolean;
 }
 
-/**
- * Rutina (plantilla de entrenamiento)
- */
 export interface Rutina extends BaseEntity {
   nombre: string;
   tipo: TipoActividad;
@@ -80,9 +57,6 @@ export interface Rutina extends BaseEntity {
   nivel?: "principiante" | "intermedio" | "avanzado";
 }
 
-/**
- * Registro de progreso
- */
 export interface ProgresoRegistro extends BaseEntity {
   fecha: string;
   peso?: number;
@@ -218,7 +192,6 @@ export const COLORS = {
   textSecondary: "#777777",
   base: "#6200ea",
   base2: "#25c4d6ff",
-  // Colores para actividades
   cardio: "#2196F3",
   pesas: "#2c842c",
   yoga: "#9C27B0",
@@ -235,9 +208,6 @@ export const FONT_SIZES = {
   xxlarge: 24,
 };
 
-/**
- * Configuración de actividades para el HomeScreen
- */
 export const ACTIVIDADES_CONFIG = [
   { id: "cardio", nombre: "Cardio", icono: "running", color: COLORS.cardio },
   { id: "pesas", nombre: "Pesas", icono: "dumbbell", color: COLORS.pesas },
