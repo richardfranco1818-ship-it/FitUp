@@ -30,35 +30,22 @@ const GymScreen: React.FC<GymScreenProps> = ({ navigation }) => {
     navigation.navigate("Profile");
   };
 
-
   const handleStartWorkout = (): void => {
-    console.log("Iniciar entrenamiento de gym");
+    navigation.navigate("WorkoutScreen");
   };
 
- 
   const handleExercises = (): void => {
-    console.log("Ver lista de ejercicios");
+    navigation.navigate("ExerciseList");
   };
-
-  const handleRoutines = (): void => {
-    console.log("Ver rutinas predefinidas");
-  };
-
 
   const handleHistory = (): void => {
-    console.log("Ver historial de gym");
-  };
-
-
-  const handleStats = (): void => {
-    console.log("Ver estadísticas de gym");
+    navigation.navigate("GymHistory");
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor={COLORS.primary} barStyle="light-content" />
 
-    
       <View style={styles.headerBar}>
         <TouchableOpacity style={styles.iconButton} onPress={handleGoBack}>
           <MaterialIcons name="arrow-back" size={24} color="white" />
@@ -70,7 +57,6 @@ const GymScreen: React.FC<GymScreenProps> = ({ navigation }) => {
       </View>
 
       <ScrollView style={styles.contentContainer}>
-   
         <View style={styles.iconContainer}>
           <FontAwesome5 name="dumbbell" size={80} color={GYM_COLOR} />
         </View>
@@ -80,7 +66,6 @@ const GymScreen: React.FC<GymScreenProps> = ({ navigation }) => {
           Entrena con pesas y desarrolla tu fuerza
         </Text>
 
-    
         <View style={styles.infoCard}>
           <MaterialIcons name="info-outline" size={24} color={GYM_COLOR} />
           <Text style={styles.infoText}>
@@ -89,18 +74,7 @@ const GymScreen: React.FC<GymScreenProps> = ({ navigation }) => {
           </Text>
         </View>
 
-      
-        <View style={styles.comingSoonCard}>
-          <MaterialIcons name="build" size={32} color={GYM_COLOR} />
-          <Text style={styles.comingSoonText}>Módulo en desarrollo</Text>
-          <Text style={styles.comingSoonSubtext}>
-            Pronto podrás registrar tus entrenamientos de gym
-          </Text>
-        </View>
-
-     
         <View style={styles.actionButtonsContainer}>
-  
           <TouchableOpacity
             style={[styles.actionButton, { backgroundColor: GYM_COLOR }]}
             onPress={handleStartWorkout}
@@ -109,7 +83,6 @@ const GymScreen: React.FC<GymScreenProps> = ({ navigation }) => {
             <Text style={styles.actionButtonText}>Iniciar Entrenamiento</Text>
           </TouchableOpacity>
 
-       
           <TouchableOpacity
             style={[
               styles.actionButton,
@@ -124,22 +97,6 @@ const GymScreen: React.FC<GymScreenProps> = ({ navigation }) => {
             </Text>
           </TouchableOpacity>
 
-          
-          <TouchableOpacity
-            style={[
-              styles.actionButton,
-              styles.secondaryButton,
-              { borderColor: GYM_COLOR },
-            ]}
-            onPress={handleRoutines}
-          >
-            <MaterialIcons name="event-note" size={24} color={GYM_COLOR} />
-            <Text style={[styles.actionButtonText, { color: GYM_COLOR }]}>
-              Mis Rutinas
-            </Text>
-          </TouchableOpacity>
-
-         
           <TouchableOpacity
             style={[
               styles.actionButton,
@@ -151,20 +108,6 @@ const GymScreen: React.FC<GymScreenProps> = ({ navigation }) => {
             <MaterialIcons name="history" size={24} color={GYM_COLOR} />
             <Text style={[styles.actionButtonText, { color: GYM_COLOR }]}>
               Ver Historial
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.actionButton,
-              styles.secondaryButton,
-              { borderColor: GYM_COLOR },
-            ]}
-            onPress={handleStats}
-          >
-            <MaterialIcons name="show-chart" size={24} color={GYM_COLOR} />
-            <Text style={[styles.actionButtonText, { color: GYM_COLOR }]}>
-              Estadísticas
             </Text>
           </TouchableOpacity>
         </View>
@@ -242,32 +185,6 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     marginLeft: 12,
     lineHeight: 20,
-  },
-  comingSoonCard: {
-    backgroundColor: COLORS.surface,
-    padding: 24,
-    borderRadius: 12,
-    marginBottom: 30,
-    alignItems: "center",
-    elevation: 2,
-    shadowColor: COLORS.text,
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 1 },
-    shadowRadius: 3,
-    borderLeftWidth: 4,
-    borderLeftColor: GYM_COLOR,
-  },
-  comingSoonText: {
-    fontSize: FONT_SIZES.large,
-    fontWeight: "bold",
-    color: COLORS.text,
-    marginTop: 12,
-  },
-  comingSoonSubtext: {
-    fontSize: FONT_SIZES.small,
-    color: COLORS.textSecondary,
-    marginTop: 8,
-    textAlign: "center",
   },
   actionButtonsContainer: {
     marginTop: 10,

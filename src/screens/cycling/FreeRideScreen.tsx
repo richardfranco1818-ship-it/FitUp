@@ -205,7 +205,7 @@ const FreeRideScreen: React.FC<FreeRideScreenProps> = ({ navigation }) => {
           <Text style={styles.timerLabel}>Tiempo</Text>
         </View>
 
-+
+
         <View style={styles.metricsGrid}>
           <View style={styles.metricCard}>
             <FontAwesome5 name="route" size={20} color={COLORS.accent} />

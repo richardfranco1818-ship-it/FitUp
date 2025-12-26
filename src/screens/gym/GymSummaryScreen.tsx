@@ -11,44 +11,48 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
-import { formatTime, formatPace } from "../../utils/cardioUtils";
-import { CardioWorkout } from '../../../types/cardio.types';
-import { saveCardioWorkout } from '../../services/cardioOfflineService';
-import { useAuth } from '../../context/AuthContext';
+import { formatTime } from "../../utils/cardioUtils";
+import { GymWorkout, CATEGORY_NAMES, CATEGORY_COLORS } from "../../../types/gym.types";
+import { saveGymWorkout } from "../../services/gymService";
+import { useAuth } from "../../context/AuthContext";
 
 const COLORS = {
   background: "#1a1a2e",
   surface: "#16213e",
   surfaceLight: "#1f3460",
   accent: "#4CAF50",
-  error: "#f44336",
   text: "#ffffff",
   textSecondary: "#a0a0a0",
 };
 
-interface WorkoutSummaryScreenProps {
+interface GymSummaryScreenProps {
   navigation: any;
   route: {
     params: {
-      workout: Omit<CardioWorkout, "id">;
+      workout: Omit<GymWorkout, "id">;
     };
   };
 }
 
-const WorkoutSummaryScreen: React.FC<WorkoutSummaryScreenProps> = ({
-  navigation,
-  route,
-}) => {
+const GymSummaryScreen: React.FC<GymSummaryScreenProps> = ({ navigation, route }) => {
   const { workout } = route.params;
   const { user } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
 
-  const distanceKm = (workout.totalDistance / 1000).toFixed(2);
   const timeFormatted = formatTime(workout.totalDuration);
-  const paceFormatted = formatPace(workout.averagePace);
-  const speedKmh = workout.totalDuration > 0 
-    ? ((workout.totalDistance / 1000) / (workout.totalDuration / 3600)).toFixed(1)
-    : "0.0";
+
+  // Formatear fecha
+  const workoutDate = new Date(workout.startTime);
+  const dateString = workoutDate.toLocaleDateString("es-MX", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  const timeString = workoutDate.toLocaleTimeString("es-MX", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
   const handleSave = async () => {
     if (!user?.uid) {
@@ -57,28 +61,23 @@ const WorkoutSummaryScreen: React.FC<WorkoutSummaryScreenProps> = ({
     }
 
     setIsSaving(true);
-    
+
     try {
-      // Agregar el userId correcto al workout
       const workoutWithUser = {
         ...workout,
-        userId: user.uid,
+        oderId: user.uid,
       };
 
-      await saveCardioWorkout(workoutWithUser);
-      
+      await saveGymWorkout(workoutWithUser);
+
       Alert.alert(
-        "¡Guardado!", 
-        "Tu entrenamiento ha sido guardado. Se sincronizará automáticamente.", 
+        "¡Guardado!",
+        "Tu entrenamiento ha sido guardado correctamente.",
         [{ text: "OK", onPress: () => navigation.navigate("Home") }]
       );
     } catch (error) {
       console.error("Error al guardar:", error);
-      Alert.alert(
-        "Error", 
-        "No se pudo guardar el entrenamiento. Intenta de nuevo.",
-        [{ text: "OK" }]
-      );
+      Alert.alert("Error", "No se pudo guardar el entrenamiento. Intenta de nuevo.");
     } finally {
       setIsSaving(false);
     }
@@ -99,19 +98,6 @@ const WorkoutSummaryScreen: React.FC<WorkoutSummaryScreenProps> = ({
     );
   };
 
-  // Formatear fecha
-  const workoutDate = new Date(workout.startTime);
-  const dateString = workoutDate.toLocaleDateString('es-MX', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-  const timeString = workoutDate.toLocaleTimeString('es-MX', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor={COLORS.background} barStyle="light-content" />
@@ -125,7 +111,7 @@ const WorkoutSummaryScreen: React.FC<WorkoutSummaryScreenProps> = ({
         </View>
       </View>
 
-      <ScrollView 
+      <ScrollView
         style={styles.content}
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
@@ -133,9 +119,9 @@ const WorkoutSummaryScreen: React.FC<WorkoutSummaryScreenProps> = ({
         {/* Estadísticas principales */}
         <View style={styles.mainStats}>
           <View style={styles.mainStatCard}>
-            <FontAwesome5 name="route" size={28} color={COLORS.accent} />
-            <Text style={styles.mainStatValue}>{distanceKm}</Text>
-            <Text style={styles.mainStatLabel}>Kilómetros</Text>
+            <FontAwesome5 name="dumbbell" size={28} color={COLORS.accent} />
+            <Text style={styles.mainStatValue}>{workout.totalVolume.toLocaleString()}</Text>
+            <Text style={styles.mainStatLabel}>kg Totales</Text>
           </View>
 
           <View style={styles.mainStatCard}>
@@ -148,29 +134,65 @@ const WorkoutSummaryScreen: React.FC<WorkoutSummaryScreenProps> = ({
         {/* Estadísticas secundarias */}
         <View style={styles.secondaryStats}>
           <View style={styles.statCard}>
-            <MaterialIcons name="speed" size={24} color="#FF9800" />
-            <Text style={styles.statValue}>{paceFormatted.formatted}</Text>
-            <Text style={styles.statLabel}>Ritmo (min/km)</Text>
+            <MaterialIcons name="fitness-center" size={24} color="#FF9800" />
+            <Text style={styles.statValue}>{workout.exercises.length}</Text>
+            <Text style={styles.statLabel}>Ejercicios</Text>
           </View>
 
           <View style={styles.statCard}>
-            <MaterialIcons name="directions-run" size={24} color="#9C27B0" />
-            <Text style={styles.statValue}>{speedKmh}</Text>
-            <Text style={styles.statLabel}>Velocidad (km/h)</Text>
+            <MaterialIcons name="repeat" size={24} color="#9C27B0" />
+            <Text style={styles.statValue}>{workout.totalSets}</Text>
+            <Text style={styles.statLabel}>Series</Text>
           </View>
 
           <View style={styles.statCard}>
-            <MaterialIcons name="local-fire-department" size={24} color="#F44336" />
-            <Text style={styles.statValue}>{workout.caloriesBurned || 0}</Text>
-            <Text style={styles.statLabel}>Calorías</Text>
+            <MaterialIcons name="trending-up" size={24} color="#00BCD4" />
+            <Text style={styles.statValue}>{workout.totalReps}</Text>
+            <Text style={styles.statLabel}>Repeticiones</Text>
           </View>
 
           <View style={styles.statCard}>
-            <MaterialIcons name="location-on" size={24} color="#00BCD4" />
-            <Text style={styles.statValue}>{workout.route?.length || 0}</Text>
-            <Text style={styles.statLabel}>Puntos GPS</Text>
+            <MaterialIcons name="speed" size={24} color="#F44336" />
+            <Text style={styles.statValue}>
+              {workout.totalSets > 0
+                ? Math.round(workout.totalVolume / workout.totalSets)
+                : 0}
+            </Text>
+            <Text style={styles.statLabel}>kg/Serie Prom</Text>
           </View>
         </View>
+
+        {/* Detalle de ejercicios */}
+        <Text style={styles.sectionTitle}>Ejercicios realizados</Text>
+        {workout.exercises.map((we, index) => (
+          <View key={index} style={styles.exerciseDetail}>
+            <View style={styles.exerciseDetailHeader}>
+              <View
+                style={[
+                  styles.categoryDot,
+                  { backgroundColor: CATEGORY_COLORS[we.exercise.category] },
+                ]}
+              />
+              <View style={styles.exerciseDetailInfo}>
+                <Text style={styles.exerciseDetailName}>{we.exercise.name}</Text>
+                <Text style={styles.exerciseDetailCategory}>
+                  {CATEGORY_NAMES[we.exercise.category]}
+                </Text>
+              </View>
+              <Text style={styles.exerciseDetailSets}>{we.sets.length} series</Text>
+            </View>
+
+            <View style={styles.setsPreview}>
+              {we.sets.map((set, setIndex) => (
+                <View key={setIndex} style={styles.setPreviewItem}>
+                  <Text style={styles.setPreviewText}>
+                    {set.weight}kg × {set.reps}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        ))}
 
         {/* Fecha y hora */}
         <View style={styles.dateContainer}>
@@ -181,12 +203,14 @@ const WorkoutSummaryScreen: React.FC<WorkoutSummaryScreenProps> = ({
           <MaterialIcons name="access-time" size={20} color={COLORS.textSecondary} />
           <Text style={styles.dateText}>{timeString}</Text>
         </View>
+
+        <View style={{ height: 100 }} />
       </ScrollView>
 
       {/* Botones de acción */}
       <View style={styles.actions}>
-        <TouchableOpacity 
-          style={styles.discardButton} 
+        <TouchableOpacity
+          style={styles.discardButton}
           onPress={handleDiscard}
           disabled={isSaving}
         >
@@ -194,8 +218,8 @@ const WorkoutSummaryScreen: React.FC<WorkoutSummaryScreenProps> = ({
           <Text style={styles.discardText}>Descartar</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={[styles.saveButton, isSaving && styles.saveButtonDisabled]} 
+        <TouchableOpacity
+          style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
           onPress={handleSave}
           disabled={isSaving}
         >
@@ -257,7 +281,7 @@ const styles = StyleSheet.create({
     minWidth: 140,
   },
   mainStatValue: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: "bold",
     color: COLORS.text,
     marginTop: 8,
@@ -271,7 +295,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    marginBottom: 20,
+    marginBottom: 24,
   },
   statCard: {
     width: "48%",
@@ -291,6 +315,62 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: COLORS.textSecondary,
     marginTop: 4,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: COLORS.text,
+    marginBottom: 16,
+  },
+  exerciseDetail: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+  },
+  exerciseDetailHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  categoryDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 12,
+  },
+  exerciseDetailInfo: {
+    flex: 1,
+  },
+  exerciseDetailName: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: COLORS.text,
+  },
+  exerciseDetailCategory: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    marginTop: 2,
+  },
+  exerciseDetailSets: {
+    fontSize: 14,
+    color: COLORS.accent,
+    fontWeight: "600",
+  },
+  setsPreview: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginTop: 12,
+    gap: 8,
+  },
+  setPreviewItem: {
+    backgroundColor: COLORS.surfaceLight,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  setPreviewText: {
+    fontSize: 13,
+    color: COLORS.text,
   },
   dateContainer: {
     flexDirection: "row",
@@ -343,4 +423,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default WorkoutSummaryScreen;
+export default GymSummaryScreen;

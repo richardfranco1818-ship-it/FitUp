@@ -23,6 +23,13 @@ import RideSummaryScreen from "../screens/cycling/RideSummaryScreen";
 import CyclingHistoryScreen from "../screens/cycling/CyclingHistoryScreen";
 import { CyclingWorkout } from "../../types/cycling.types";
 
+// Gym 
+import WorkoutScreen from "../screens/gym/WorkoutScreen";
+import ExerciseListScreen from "../screens/gym/ExerciseListScreen";
+import GymSummaryScreen from "../screens/gym/GymSummaryScreen";
+import GymHistoryScreen from "../screens/gym/GymHistoryScreen";
+import { GymWorkout } from "../../types/gym.types";
+
 
 export type RootStackParamList = {
   Login: undefined;
@@ -41,6 +48,12 @@ export type RootStackParamList = {
   FreeRide: undefined;
   RideSummary: { workout: Omit<CyclingWorkout, "id"> };
   CyclingHistory: undefined;
+
+  //Gym
+  WorkoutScreen: undefined;
+  ExerciseList: undefined;
+  GymSummary: { workout: Omit<GymWorkout, "id"> };
+  GymHistory: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -163,6 +176,28 @@ const StackNavigator: React.FC = () => {
       <Stack.Screen
         name="CyclingHistory"
         component={CyclingHistoryScreen}
+        options={{ headerShown: false }}
+      />
+
+      
+      <Stack.Screen
+        name="WorkoutScreen"
+        component={WorkoutScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ExerciseList"
+        component={ExerciseListScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="GymSummary"
+        component={GymSummaryScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="GymHistory"
+        component={GymHistoryScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

@@ -15,6 +15,7 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { CommonActions } from "@react-navigation/native";
 import { RootStackParamList } from "../../navigation/StackNavigator";
 import { COLORS, FONT_SIZES } from "../../../types";
+import  SyncStatusBar  from '../../components/SyncStatusBar';
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, "Home">;
 
@@ -36,6 +37,16 @@ interface MenuOption {
 const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [menuVisible, setMenuVisible] = useState<boolean>(false);
 
+  const HomeScreen = () => {
+  return (
+    <SafeAreaView style={styles.container}>
+      {/* Agregar al inicio del contenido */}
+      <SyncStatusBar />
+      
+      {/* Resto de tu contenido */}
+    </SafeAreaView>
+      );
+  };
   const menuOptions: MenuOption[] = [
     {
       id: "cardio",
