@@ -3,6 +3,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { AuthProvider } from "./src/context/AuthContext";
 import StackNavigator from "./src/navigation/StackNavigator";
 import { syncService } from './src/services/syncService';
+import 'react-native-get-random-values';
 
 export default function App() {
   useEffect(() => {

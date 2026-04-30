@@ -1,320 +1,141 @@
-import { 
-  collection, 
-  doc, 
-  addDoc, 
-  deleteDoc, 
-  getDoc,
-  getDocs, 
-  query, 
-  where, 
-  orderBy, 
-  limit,
-  Timestamp,
-  setDoc,
-} from 'firebase/firestore';
+// src/services/cardioService.ts
+import { supabase } from '../config/supabase';
+import { CardioWorkout, CardioStats, WorkoutFilters } from '../../types/cardio.types';
 
-import { db } from '../config/firebase';
+// ── HELPERS ──────────────────────────────────────────────────
+const toRow = (workout: Omit<CardioWorkout, 'id'>): Record<string, any> => ({
+  user_id:        workout.userId,
+  type:           workout.type,
+  status:         workout.status,
+  start_time:     workout.startTime,
+  end_time:       workout.endTime ?? null,
+  total_duration: workout.totalDuration ?? 0,
+  total_distance: workout.totalDistance ?? 0,
+  average_speed:  workout.averageSpeed ?? 0,
+  average_pace:   workout.averagePace ?? 0,
+  max_speed:      workout.maxSpeed ?? null,
+  calories_burned:workout.caloriesBurned ?? 0,
+  elevation_gain: workout.elevationGain ?? null,
+  elevation_loss: workout.elevationLoss ?? null,
+  route:          workout.route ?? [],
+  splits:         workout.splits ?? [],
+  config:         workout.config ?? null,
+  notes:          workout.notes ?? null,
+  rating:         workout.rating ?? null,
+  created_at:     workout.createdAt ?? Date.now(),
+  updated_at:     workout.updatedAt ?? null,
+});
 
-import { 
-  CardioWorkout, 
-  CardioStats, 
-  WorkoutFilters,
-} from '../../types/cardio.types';
-const COLLECTION_WORKOUTS = 'cardioWorkouts';
-const COLLECTION_STATS = 'userStats';
+const fromRow = (row: Record<string, any>): CardioWorkout => ({
+  id:             row.id,
+  userId:         row.user_id,
+  type:           row.type,
+  status:         row.status,
+  startTime:      row.start_time,
+  endTime:        row.end_time ?? undefined,
+  totalDuration:  row.total_duration,
+  totalDistance:  row.total_distance,
+  averageSpeed:   row.average_speed,
+  averagePace:    row.average_pace,
+  maxSpeed:       row.max_speed ?? undefined,
+  caloriesBurned: row.calories_burned ?? 0,
+  elevationGain:  row.elevation_gain ?? undefined,
+  elevationLoss:  row.elevation_loss ?? undefined,
+  route:          row.route ?? [],
+  splits:         row.splits ?? [],
+  config:         row.config ?? undefined,
+  notes:          row.notes ?? undefined,
+  rating:         row.rating ?? undefined,
+  createdAt:      row.created_at,
+  updatedAt:      row.updated_at ?? undefined,
+});
 
-const toFirestoreWorkout = (workout: Omit<CardioWorkout, 'id'>): Record<string, any> => {
-  const data: Record<string, any> = {
-    userId: workout.userId,
-    type: workout.type,
-    status: workout.status,
-    startTime: Timestamp.fromMillis(workout.startTime),
-    totalDuration: workout.totalDuration || 0,
-    totalDistance: workout.totalDistance || 0,
-    averageSpeed: workout.averageSpeed || 0,
-    averagePace: workout.averagePace || 0,
-    caloriesBurned: workout.caloriesBurned || 0,
-    route: workout.route || [],
-    splits: workout.splits || [],
-    createdAt: Timestamp.fromMillis(workout.createdAt || Date.now()),
-  };
+// ── GUARDAR ──────────────────────────────────────────────────
+export const saveWorkout = async (workout: Omit<CardioWorkout, 'id'>): Promise<string> => {
+  const { data, error } = await supabase
+    .from('cardio_workouts')
+    .insert(toRow(workout))
+    .select('id')
+    .single();
 
-  // Solo agregar campos opcionales si tienen valor
-  if (workout.endTime) {
-    data.endTime = Timestamp.fromMillis(workout.endTime);
-  }
-  if (workout.maxSpeed !== undefined && workout.maxSpeed !== null) {
-    data.maxSpeed = workout.maxSpeed;
-  }
-  if (workout.elevationGain !== undefined && workout.elevationGain !== null) {
-    data.elevationGain = workout.elevationGain;
-  }
-  if (workout.elevationLoss !== undefined && workout.elevationLoss !== null) {
-    data.elevationLoss = workout.elevationLoss;
-  }
-  if (workout.notes) {
-    data.notes = workout.notes;
-  }
-  if (workout.rating !== undefined && workout.rating !== null) {
-    data.rating = workout.rating;
-  }
-  if (workout.config) {
-    data.config = workout.config;
-  }
-
-  return data;
+  if (error) throw new Error('No se pudo guardar el entrenamiento: ' + error.message);
+  return data.id;
 };
 
-
- //Convierte un workout de Firestore a formato local
- 
-const fromFirestoreWorkout = (id: string, data: Record<string, any>): CardioWorkout => {
-  return {
-    id,
-    userId: data.userId,
-    type: data.type,
-    status: data.status,
-    startTime: data.startTime.toMillis(),
-    endTime: data.endTime?.toMillis(),
-    totalDuration: data.totalDuration,
-    totalDistance: data.totalDistance,
-    averageSpeed: data.averageSpeed,
-    averagePace: data.averagePace,
-    maxSpeed: data.maxSpeed,
-    caloriesBurned: data.caloriesBurned,
-    elevationGain: data.elevationGain,
-    elevationLoss: data.elevationLoss,
-    route: data.route || [],
-    splits: data.splits || [],
-    config: data.config,
-    notes: data.notes,
-    rating: data.rating,
-    createdAt: data.createdAt.toMillis(),
-    updatedAt: data.updatedAt?.toMillis(),
-  };
-};
-
-
- //Guarda un nuevo entrenamiento de cardio
- 
-export const saveWorkout = async (
-  workout: Omit<CardioWorkout, 'id'>
-): Promise<string> => {
-  try {
-    console.log('=== GUARDANDO WORKOUT ===');
-    console.log('userId:', workout.userId);
-    console.log('type:', workout.type);
-    console.log('totalDistance:', workout.totalDistance);
-    console.log('totalDuration:', workout.totalDuration);
-    
-    const workoutsRef = collection(db, COLLECTION_WORKOUTS);
-    const firestoreData = toFirestoreWorkout(workout);
-    
-    console.log('Datos preparados para Firestore');
-    
-    const docRef = await addDoc(workoutsRef, firestoreData);
-    
-    console.log('Workout guardado con ID:', docRef.id);
-    
-    // Actualizar estadísticas del usuario
-    await updateUserStats(workout.userId, workout);
-    
-    return docRef.id;
-  } catch (error: any) {
-    console.error('=== ERROR DETALLADO ===');
-    console.error('Código:', error.code);
-    console.error('Mensaje:', error.message);
-    console.error('Error completo:', error);
-    throw new Error('No se pudo guardar el entrenamiento');
-  }
-};
-
- //Obtiene un entrenamiento por ID
- 
-export const getWorkout = async (
-  workoutId: string
-): Promise<CardioWorkout | null> => {
-  try {
-    const docRef = doc(db, COLLECTION_WORKOUTS, workoutId);
-    const docSnap = await getDoc(docRef);
-    
-    if (!docSnap.exists()) {
-      return null;
-    }
-    
-    return fromFirestoreWorkout(docSnap.id, docSnap.data());
-  } catch (error) {
-    console.error('Error obteniendo workout:', error);
-    throw new Error('No se pudo obtener el entrenamiento');
-  }
-};
-
-//Obtiene todos los entrenamientos de un usuario
-
+// ── OBTENER LISTA ────────────────────────────────────────────
 export const getUserWorkouts = async (
   userId: string,
   filters?: WorkoutFilters,
   maxResults: number = 50
 ): Promise<CardioWorkout[]> => {
-  try {
-    const workoutsRef = collection(db, COLLECTION_WORKOUTS);
-    
-    const q = query(
-      workoutsRef,
-      where('userId', '==', userId),
-      orderBy('startTime', 'desc'),
-      limit(maxResults)
-    );
-    
-    const querySnapshot = await getDocs(q);
-    
-    const workouts: CardioWorkout[] = [];
-    querySnapshot.forEach((docSnap) => {
-      workouts.push(fromFirestoreWorkout(docSnap.id, docSnap.data()));
-    });
-    
-    // Filtros adicionales en cliente
-    let filtered = workouts;
-    
-    if (filters?.type) {
-      filtered = filtered.filter(w => w.type === filters.type);
-    }
-    if (filters?.dateFrom) {
-      filtered = filtered.filter(w => w.startTime >= filters.dateFrom!);
-    }
-    if (filters?.dateTo) {
-      filtered = filtered.filter(w => w.startTime <= filters.dateTo!);
-    }
-    if (filters?.minDistance) {
-      filtered = filtered.filter(w => w.totalDistance >= filters.minDistance!);
-    }
-    if (filters?.maxDistance) {
-      filtered = filtered.filter(w => w.totalDistance <= filters.maxDistance!);
-    }
-    
-    return filtered;
-  } catch (error) {
-    console.error('Error obteniendo workouts:', error);
-    throw new Error('No se pudieron obtener los entrenamientos');
-  }
+  let query = supabase
+    .from('cardio_workouts')
+    .select('*')
+    .eq('user_id', userId)
+    .order('start_time', { ascending: false })
+    .limit(maxResults);
+
+  if (filters?.type)        query = query.eq('type', filters.type);
+  if (filters?.dateFrom)    query = query.gte('start_time', filters.dateFrom);
+  if (filters?.dateTo)      query = query.lte('start_time', filters.dateTo);
+  if (filters?.minDistance) query = query.gte('total_distance', filters.minDistance);
+  if (filters?.maxDistance) query = query.lte('total_distance', filters.maxDistance);
+
+  const { data, error } = await query;
+  if (error) throw new Error('No se pudieron obtener los entrenamientos: ' + error.message);
+  return (data ?? []).map(fromRow);
 };
 
-
- //Elimina un entrenamiento
- 
+// ── ELIMINAR ─────────────────────────────────────────────────
 export const deleteWorkout = async (workoutId: string): Promise<void> => {
-  try {
-    const docRef = doc(db, COLLECTION_WORKOUTS, workoutId);
-    await deleteDoc(docRef);
-  } catch (error) {
-    console.error('Error eliminando workout:', error);
-    throw new Error('No se pudo eliminar el entrenamiento');
-  }
+  const { error } = await supabase
+    .from('cardio_workouts')
+    .delete()
+    .eq('id', workoutId);
+
+  if (error) throw new Error('No se pudo eliminar el entrenamiento: ' + error.message);
 };
 
-
-// ESTADÍSTICAS DEL USUARIO
-//Obtiene las estadísticas de cardio de un usuario
- 
+// ── ESTADÍSTICAS ─────────────────────────────────────────────
 export const getUserStats = async (userId: string): Promise<CardioStats | null> => {
-  try {
-    const docRef = doc(db, COLLECTION_STATS, `cardio_${userId}`);
-    const docSnap = await getDoc(docRef);
-    
-    if (!docSnap.exists()) {
-      return null;
-    }
-    
-    return docSnap.data() as CardioStats;
-  } catch (error) {
-    console.error('Error obteniendo stats:', error);
-    return null;
-  }
+  const { data, error } = await supabase
+    .from('cardio_workouts')
+    .select('total_duration, total_distance, calories_burned, average_pace, type, start_time')
+    .eq('user_id', userId);
+
+  if (error || !data || data.length === 0) return null;
+
+  const totalWorkouts  = data.length;
+  const totalDistance  = data.reduce((s, r) => s + (r.total_distance ?? 0), 0);
+  const totalTime      = data.reduce((s, r) => s + (r.total_duration ?? 0), 0);
+  const totalCalories  = data.reduce((s, r) => s + (r.calories_burned ?? 0), 0);
+  const paces          = data.filter(r => r.average_pace > 0).map(r => r.average_pace);
+  const fastestPace    = paces.length ? Math.min(...paces) : 9999;
+
+  const workoutsByType: any = {};
+  data.forEach(r => {
+    workoutsByType[r.type] = (workoutsByType[r.type] ?? 0) + 1;
+  });
+
+  return {
+    totalWorkouts,
+    totalDistance,
+    totalTime,
+    totalCalories,
+    avgDistance:  totalWorkouts ? totalDistance / totalWorkouts : 0,
+    avgDuration:  totalWorkouts ? totalTime / totalWorkouts     : 0,
+    avgPace:      totalDistance > 0 ? totalTime / (totalDistance / 1000) : 0,
+    longestDistance: Math.max(...data.map(r => r.total_distance ?? 0)),
+    longestDuration: Math.max(...data.map(r => r.total_duration ?? 0)),
+    fastestPace,
+    workoutsByType,
+    currentStreak: 0,
+    longestStreak: 0,
+    lastWorkoutDate: data.length ? data[0].start_time : undefined,
+  };
 };
 
-
- //Actualiza las estadísticas del usuario después de un entrenamiento
- 
-export const updateUserStats = async (
-  userId: string,
-  newWorkout: Omit<CardioWorkout, 'id'>
-): Promise<void> => {
-  try {
-    const docRef = doc(db, COLLECTION_STATS, `cardio_${userId}`);
-    const docSnap = await getDoc(docRef);
-    
-    let currentStats: CardioStats;
-    
-    if (docSnap.exists()) {
-      currentStats = docSnap.data() as CardioStats;
-    } else {
-      // Inicializar estadísticas nuevas
-      currentStats = {
-        totalWorkouts: 0,
-        totalDistance: 0,
-        totalTime: 0,
-        totalCalories: 0,
-        avgDistance: 0,
-        avgDuration: 0,
-        avgPace: 0,
-        longestDistance: 0,
-        longestDuration: 0,
-        fastestPace: 9999, // Usar número alto en lugar de Infinity
-        workoutsByType: {},
-        currentStreak: 0,
-        longestStreak: 0,
-      };
-    }
-    
-    // Actualizar totales
-    currentStats.totalWorkouts += 1;
-    currentStats.totalDistance += newWorkout.totalDistance;
-    currentStats.totalTime += newWorkout.totalDuration;
-    currentStats.totalCalories += newWorkout.caloriesBurned || 0;
-    
-    // Actualizar promedios
-    currentStats.avgDistance = currentStats.totalDistance / currentStats.totalWorkouts;
-    currentStats.avgDuration = currentStats.totalTime / currentStats.totalWorkouts;
-    if (currentStats.totalDistance > 0) {
-      currentStats.avgPace = currentStats.totalTime / (currentStats.totalDistance / 1000);
-    }
-    
-    // Actualizar records
-    if (newWorkout.totalDistance > currentStats.longestDistance) {
-      currentStats.longestDistance = newWorkout.totalDistance;
-    }
-    if (newWorkout.totalDuration > currentStats.longestDuration) {
-      currentStats.longestDuration = newWorkout.totalDuration;
-    }
-    if (newWorkout.averagePace < currentStats.fastestPace && newWorkout.averagePace > 0) {
-      currentStats.fastestPace = newWorkout.averagePace;
-    }
-    
-    // Actualizar por tipo
-    const typeCount = currentStats.workoutsByType[newWorkout.type] || 0;
-    currentStats.workoutsByType[newWorkout.type] = typeCount + 1;
-    
-    currentStats.lastWorkoutDate = newWorkout.startTime;
-    
-    // Guardar estadísticas
-    await setDoc(docRef, currentStats);
-  } catch (error) {
-    console.error('Error actualizando stats:', error);
-  }
-};
-
-/**
- * Obtiene los entrenamientos de la última semana
- */
-export const getWeeklyWorkouts = async (userId: string): Promise<CardioWorkout[]> => {
-  const weekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
-  return getUserWorkouts(userId, { dateFrom: weekAgo });
-};
-
-/**
- * Obtiene el último entrenamiento del usuario
- */
-export const getLastWorkout = async (userId: string): Promise<CardioWorkout | null> => {
-  const workouts = await getUserWorkouts(userId, undefined, 1);
-  return workouts.length > 0 ? workouts[0] : null;
+export const updateUserStats = async (): Promise<void> => {
+  // Con Supabase las estadísticas se calculan en tiempo real desde getUserStats
+  // No se necesita guardar un documento separado como en Firestore
 };
