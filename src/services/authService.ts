@@ -127,6 +127,12 @@ export const actualizarPerfil = async (
   if (error) throw new Error(error.message);
 };
 
+// ── RECUPERAR CONTRASEÑA ─────────────────────────────────────
+export const recuperarContrasena = async (email: string): Promise<void> => {
+  const { error } = await supabase.auth.resetPasswordForEmail(email);
+  if (error) throw new Error(getErrorMessage(error.message));
+};
+
 // ── OBSERVAR AUTH STATE ──────────────────────────────────────
 export const observarAuth = (callback: (user: any) => void) => {
   const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {

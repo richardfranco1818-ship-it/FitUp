@@ -14,8 +14,9 @@ import {
 } from "react-native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../../navigation/StackNavigator";
-import { iniciarSesion } from "../../services/authService";
+import { iniciarSesion, recuperarContrasena } from "../../services/authService";
 import { FONT_SIZES } from "../../../types/index";
+
 
 const loginImage = require("../../../assets/PESA.png");
 
@@ -57,10 +58,24 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   };
 
   const handleForgotPassword = () => {
-    Alert.alert(
-      "Recuperar Contraseña",
-      "Esta funcionalidad estará disponible próximamente.",
-      [{ text: "Entendido" }]
+    Alert.prompt(
+      "Recuperar contraseña",
+      "Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.",
+      async (email) => {
+        if (!email) return;
+        try {
+          await recuperarContrasena(email);
+          Alert.alert(
+            "Correo enviado",
+            `Revisa tu bandeja de entrada en ${email} y sigue las instrucciones para restablecer tu contraseña.`
+          );
+        } catch (error: any) {
+          Alert.alert("Error", error.message);
+        }
+      },
+      "plain-text",
+      "",
+      "email-address"
     );
   };
 

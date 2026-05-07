@@ -20,7 +20,9 @@ import { RootStackParamList } from "../../navigation/StackNavigator";
 import { COLORS, FONT_SIZES } from "../../../types";
 import { useAuth } from "../../context/AuthContext";
 import { actualizarPerfil } from "../../services/authService";
+import { subirFotoPerfil, eliminarFotoPerfil } from "../../services/photoService";
 import * as ImagePicker from "expo-image-picker";
+
 
 type ProfileScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -80,52 +82,47 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const solicitarPermisos = async (tipo: "camera" | "library"): Promise<boolean> => {
     try {
       if (tipo === "camera") {
-        const { status } = await ImagePicker.requestCameraPermissionsAsync();
-        if (status !== "granted") {
+        const { status, canAskAgain } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status === "granted") return true;
+        if (!canAskAgain) {
           Alert.alert(
-            "Permiso de cámara",
-            "Necesitamos acceso a tu cámara para tomar fotos.",
+            "Permiso de cámara bloqueado",
+            "Ve a Configuración → FitUp → Cámara y actívalo manualmente.",
             [
               { text: "Cancelar", style: "cancel" },
               { text: "Abrir Configuración", onPress: () => Linking.openSettings() },
             ]
           );
-          return false;
         }
-        return true;
+        return false;
       } else {
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== "granted") {
+        const { status, canAskAgain } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status === "granted") return true;
+        if (!canAskAgain) {
           Alert.alert(
-            "Permiso de galería",
-            "Necesitamos acceso a tu galería para seleccionar fotos.",
+            "Permiso de galería bloqueado",
+            "Ve a Configuración → FitUp → Fotos y actívalo manualmente.",
             [
               { text: "Cancelar", style: "cancel" },
               { text: "Abrir Configuración", onPress: () => Linking.openSettings() },
             ]
           );
-          return false;
         }
-        return true;
+        return false;
       }
     } catch (error) {
       console.log("Error al solicitar permisos:", error);
       return false;
     }
   };
-
   // Tomar foto con cámara
   const tomarFoto = async () => {
     setModalVisible(false);
-
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    const tienePermisos = await solicitarPermisos("camera");
-    if (!tienePermisos) return;
+    await new Promise((resolve) => setTimeout(resolve, 800));
 
     try {
       const resultado = await ImagePicker.launchCameraAsync({
-        mediaTypes: ["images"],
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.7,
@@ -143,18 +140,14 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   // Seleccionar de galería
   const seleccionarDeGaleria = async () => {
     setModalVisible(false);
-
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    const tienePermisos = await solicitarPermisos("library");
-    if (!tienePermisos) return;
+    await new Promise((resolve) => setTimeout(resolve, 800));
 
     try {
       const resultado = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ["images"],
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [1, 1],
-        quality: 0.7,
+        quality: 0.5,
       });
 
       if (!resultado.canceled && resultado.assets && resultado.assets[0]) {
@@ -165,7 +158,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
       Alert.alert("Error", "No se pudo acceder a la galería");
     }
   };
-
   // Guardar foto en el perfil
   const guardarFoto = async (uri: string) => {
     if (!user) {
@@ -175,13 +167,19 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
     setIsLoading(true);
     try {
-      await actualizarPerfil(user.uid, { fotoPerfil: uri });
-      setFotoPerfil(uri);
+      // 1. Subir imagen a Supabase Storage y obtener URL pública
+      console.log('[ProfileScreen] Subiendo foto a Supabase Storage...');
+      const urlPublica = await subirFotoPerfil(user.uid, uri);
+
+      // 2. Guardar la URL pública en la tabla profiles
+      await actualizarPerfil(user.uid, { fotoPerfil: urlPublica });
+      setFotoPerfil(urlPublica);
 
       if (profile) {
-        setProfile({ ...profile, fotoPerfil: uri });
+        setProfile({ ...profile, fotoPerfil: urlPublica });
       }
 
+      console.log('[ProfileScreen] ✓ Foto guardada con URL:', urlPublica);
       Alert.alert("Éxito", "Foto de perfil actualizada");
     } catch (error: any) {
       console.log("Error al guardar foto:", error);
@@ -209,6 +207,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
             onPress: async () => {
               setIsLoading(true);
               try {
+                await eliminarFotoPerfil(user.uid);
                 await actualizarPerfil(user.uid, { fotoPerfil: "" });
                 setFotoPerfil("");
 
@@ -372,7 +371,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           <TouchableOpacity onPress={() => setModalVisible(true)} disabled={isLoading}>
             <View style={styles.avatarWrapper}>
               {fotoPerfil ? (
-                <Image source={{ uri: fotoPerfil }} style={styles.avatarImage} />
+                <Image 
+                source={{ uri: `${fotoPerfil}?t=${Date.now()}` }} 
+                style={styles.avatarImage} 
+                />
               ) : (
                 <View style={styles.avatar}>
                   <MaterialIcons name="person" size={80} color={COLORS.primary} />

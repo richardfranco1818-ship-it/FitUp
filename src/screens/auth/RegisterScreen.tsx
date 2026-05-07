@@ -12,45 +12,23 @@ import {
   ScrollView,
 } from "react-native";
 import { StackNavigationProp } from "@react-navigation/stack";
-import { RootStackParamList } from "../../navigation/StackNavigator";
+import type { RootStackParamList } from "../../navigation/StackNavigator";
 import { registrarUsuario } from "../../services/authService";
-import { COLORS, FONT_SIZES } from "../../../types";
-import { MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
+import { MaterialIcons } from "@expo/vector-icons";
 
-type RegisterScreenNavigationProp = StackNavigationProp<
-  RootStackParamList,
-  "Register"
->;
+type RegisterScreenNavigationProp = StackNavigationProp<RootStackParamList, "Register">;
 
 interface RegisterScreenProps {
   navigation: RegisterScreenNavigationProp;
 }
-
-interface ActividadOption {
-  id: string;
-  nombre: string;
-  icon: string;
-  iconLibrary: "MaterialIcons" | "FontAwesome5";
-}
-
-const actividadesDisponibles: ActividadOption[] = [
-  { id: "cardio", nombre: "Cardio", icon: "running", iconLibrary: "FontAwesome5" },
-  { id: "pesas", nombre: "Pesas", icon: "dumbbell", iconLibrary: "FontAwesome5" },
-  { id: "yoga", nombre: "Yoga", icon: "spa", iconLibrary: "MaterialIcons" },
-  { id: "crossfit", nombre: "CrossFit", icon: "fitness-center", iconLibrary: "MaterialIcons" },
-  { id: "natacion", nombre: "Natación", icon: "swimmer", iconLibrary: "FontAwesome5" },
-  { id: "ciclismo", nombre: "Ciclismo", icon: "bicycle", iconLibrary: "FontAwesome5" },
-];
 
 const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [peso, setPeso] = useState("");
-  const [altura, setAltura] = useState("");
-  const [edad, setEdad] = useState("");
-  const [actividadFavorita, setActividadFavorita] = useState<string>("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const validateForm = (): boolean => {
@@ -74,14 +52,6 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
       Alert.alert("Error", "Las contraseñas no coinciden");
       return false;
     }
-    if (!peso.trim() || !altura.trim() || !edad.trim()) {
-      Alert.alert("Error", "Por favor, completa tus datos físicos");
-      return false;
-    }
-    if (!actividadFavorita) {
-      Alert.alert("Error", "Por favor, selecciona tu actividad favorita");
-      return false;
-    }
     return true;
   };
 
@@ -90,7 +60,8 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
 
     setIsLoading(true);
     try {
-      await registrarUsuario(email, password, nombre, peso, altura, edad, actividadFavorita);
+      // Se pasan valores vacíos para los campos eliminados
+      await registrarUsuario(email, password, nombre, "", "", "", "");
       Alert.alert("¡Éxito!", "Cuenta creada correctamente", [
         { text: "OK", onPress: () => navigation.replace("Home") },
       ]);
@@ -101,16 +72,6 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
     }
   };
 
-  const renderActividadIcon = (actividad: ActividadOption, isSelected: boolean) => {
-    const color = isSelected ? "#FFFFFF" : "#666";
-    const size = 24;
-
-    if (actividad.iconLibrary === "FontAwesome5") {
-      return <FontAwesome5 name={actividad.icon as any} size={size} color={color} />;
-    }
-    return <MaterialIcons name={actividad.icon as any} size={size} color={color} />;
-  };
-
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -118,134 +79,111 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
     >
       <SafeAreaView style={styles.container}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
+
+          {/* Header */}
           <View style={styles.header}>
             <Text style={styles.appName}>FITUP</Text>
-            <Text style={styles.appSubtitle}>Crear cuenta</Text>
+            <Text style={styles.appSubtitle}>Crea tu cuenta</Text>
           </View>
 
+          {/* Card */}
           <View style={styles.card}>
             <Text style={styles.welcomeTitle}>REGISTRO</Text>
             <Text style={styles.welcomeSubtitle}>
-              Completa tus datos para comenzar
+              Solo necesitamos lo esencial para comenzar
             </Text>
 
             <View style={styles.formContainer}>
-            
-              <Text style={styles.sectionTitle}>Datos de cuenta</Text>
-              
-              <Text style={styles.label}>Nombre</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Tu nombre completo"
-                placeholderTextColor="#999"
-                value={nombre}
-                onChangeText={setNombre}
-                autoCapitalize="words"
-                editable={!isLoading}
-              />
 
+              {/* Nombre */}
+              <Text style={styles.label}>Nombre completo</Text>
+              <View style={styles.inputContainer}>
+                <MaterialIcons name="person-outline" size={20} color="#999" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Tu nombre completo"
+                  placeholderTextColor="#999"
+                  value={nombre}
+                  onChangeText={setNombre}
+                  autoCapitalize="words"
+                  editable={!isLoading}
+                />
+              </View>
+
+              {/* Correo */}
               <Text style={styles.label}>Correo electrónico</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="correo@ejemplo.com"
-                placeholderTextColor="#999"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                editable={!isLoading}
-              />
+              <View style={styles.inputContainer}>
+                <MaterialIcons name="email" size={20} color="#999" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="correo@ejemplo.com"
+                  placeholderTextColor="#999"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  editable={!isLoading}
+                />
+              </View>
 
+              {/* Contraseña */}
               <Text style={styles.label}>Contraseña</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Mínimo 6 caracteres"
-                placeholderTextColor="#999"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                editable={!isLoading}
-              />
+              <View style={styles.inputContainer}>
+                <MaterialIcons name="lock-outline" size={20} color="#999" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Mínimo 6 caracteres"
+                  placeholderTextColor="#999"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                  editable={!isLoading}
+                />
+                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                  <MaterialIcons
+                    name={showPassword ? "visibility" : "visibility-off"}
+                    size={20}
+                    color="#999"
+                  />
+                </TouchableOpacity>
+              </View>
 
+              {/* Confirmar Contraseña */}
               <Text style={styles.label}>Confirmar contraseña</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Repite tu contraseña"
-                placeholderTextColor="#999"
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                secureTextEntry
-                editable={!isLoading}
-              />
-
-             
-              <Text style={styles.sectionTitle}>Datos físicos</Text>
-
-              <View style={styles.rowInputs}>
-                <View style={styles.halfInput}>
-                  <Text style={styles.label}>Peso (kg)</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="70"
-                    placeholderTextColor="#999"
-                    value={peso}
-                    onChangeText={setPeso}
-                    keyboardType="numeric"
-                    editable={!isLoading}
+              <View style={styles.inputContainer}>
+                <MaterialIcons name="lock-outline" size={20} color="#999" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Repite tu contraseña"
+                  placeholderTextColor="#999"
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  secureTextEntry={!showConfirmPassword}
+                  editable={!isLoading}
+                />
+                <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+                  <MaterialIcons
+                    name={showConfirmPassword ? "visibility" : "visibility-off"}
+                    size={20}
+                    color="#999"
                   />
-                </View>
-                <View style={styles.halfInput}>
-                  <Text style={styles.label}>Altura (cm)</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="170"
-                    placeholderTextColor="#999"
-                    value={altura}
-                    onChangeText={setAltura}
-                    keyboardType="numeric"
-                    editable={!isLoading}
-                  />
-                </View>
+                </TouchableOpacity>
               </View>
 
-              <Text style={styles.label}>Edad</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="25"
-                placeholderTextColor="#999"
-                value={edad}
-                onChangeText={setEdad}
-                keyboardType="numeric"
-                editable={!isLoading}
-              />
+              {/* Indicador de seguridad de contraseña */}
+              {password.length > 0 && (
+                <View style={styles.passwordStrength}>
+                  <View style={[
+                    styles.strengthBar,
+                    { backgroundColor: password.length < 6 ? "#FF5722" : password.length < 10 ? "#FF9800" : "#4CAF50" }
+                  ]} />
+                  <Text style={styles.strengthText}>
+                    {password.length < 6 ? "Contraseña débil" : password.length < 10 ? "Contraseña media" : "Contraseña fuerte"}
+                  </Text>
+                </View>
+              )}
 
-              <Text style={styles.sectionTitle}>Actividad favorita</Text>
-              <Text style={styles.sublabel}>Selecciona tu deporte preferido</Text>
-
-              <View style={styles.actividadesGrid}>
-                {actividadesDisponibles.map((actividad) => (
-                  <TouchableOpacity
-                    key={actividad.id}
-                    style={[
-                      styles.actividadOption,
-                      actividadFavorita === actividad.id && styles.actividadSelected,
-                    ]}
-                    onPress={() => setActividadFavorita(actividad.id)}
-                    disabled={isLoading}
-                  >
-                    {renderActividadIcon(actividad, actividadFavorita === actividad.id)}
-                    <Text
-                      style={[
-                        styles.actividadText,
-                        actividadFavorita === actividad.id && styles.actividadTextSelected,
-                      ]}
-                    >
-                      {actividad.nombre}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
+              {/* Botón registrar */}
               <TouchableOpacity
                 style={[styles.registerButton, isLoading && styles.buttonDisabled]}
                 onPress={handleRegister}
@@ -256,15 +194,18 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
                 </Text>
               </TouchableOpacity>
 
+              {/* Link a login */}
               <TouchableOpacity
                 style={styles.loginLink}
                 onPress={() => navigation.navigate("Login")}
                 disabled={isLoading}
               >
                 <Text style={styles.loginLinkText}>
-                  ¿Ya tienes cuenta? <Text style={styles.loginLinkBold}>Inicia sesión</Text>
+                  ¿Ya tienes cuenta?{" "}
+                  <Text style={styles.loginLinkBold}>Inicia sesión</Text>
                 </Text>
               </TouchableOpacity>
+
             </View>
           </View>
         </ScrollView>
@@ -308,6 +249,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4.65,
     elevation: 8,
+    marginBottom: 40,
   },
   welcomeTitle: {
     fontSize: 24,
@@ -325,74 +267,46 @@ const styles = StyleSheet.create({
   formContainer: {
     width: "100%",
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#0A2647",
-    marginTop: 20,
-    marginBottom: 15,
-    borderBottomWidth: 2,
-    borderBottomColor: "#F5C563",
-    paddingBottom: 5,
-  },
   label: {
     fontSize: 14,
     color: "#2C2C2C",
     marginBottom: 8,
     fontWeight: "500",
   },
-  sublabel: {
-    fontSize: 12,
-    color: "#666",
-    marginBottom: 10,
-  },
-  input: {
-    height: 50,
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: "#FFFFFF",
     borderRadius: 10,
     paddingHorizontal: 15,
     marginBottom: 15,
-    fontSize: 15,
-    color: "#2C2C2C",
     borderWidth: 1,
     borderColor: "#D0D0D0",
+    height: 50,
   },
-  rowInputs: {
+  inputIcon: {
+    marginRight: 10,
+  },
+  input: {
+    flex: 1,
+    fontSize: 15,
+    color: "#2C2C2C",
+  },
+  passwordStrength: {
     flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  halfInput: {
-    width: "48%",
-  },
-  actividadesGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    marginBottom: 20,
-  },
-  actividadOption: {
-    width: "30%",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 10,
-    padding: 12,
     alignItems: "center",
-    marginBottom: 10,
-    borderWidth: 2,
-    borderColor: "#D0D0D0",
+    marginBottom: 15,
+    marginTop: -5,
   },
-  actividadSelected: {
-    backgroundColor: "#0A2647",
-    borderColor: "#F5C563",
+  strengthBar: {
+    height: 4,
+    width: 60,
+    borderRadius: 2,
+    marginRight: 8,
   },
-  actividadText: {
-    fontSize: 11,
+  strengthText: {
+    fontSize: 12,
     color: "#666",
-    marginTop: 5,
-    textAlign: "center",
-  },
-  actividadTextSelected: {
-    color: "#FFFFFF",
-    fontWeight: "bold",
   },
   registerButton: {
     backgroundColor: "#F5C563",
