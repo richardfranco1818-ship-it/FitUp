@@ -1,0 +1,107 @@
+# docker-compose.yml
+# FitUp - Infraestructura local con contenedores
+#
+# Este archivo levanta una instancia LOCAL de Supabase usando Docker.
+# En producción, FitUp usa Supabase Cloud (https://zhzruarrxwnugsufvgdd.supabase.co)
+# Para desarrollo local, este compose replica el mismo backend en contenedores.
+#
+# USO:
+#   docker compose up -d        # Levantar todos los servicios
+#   docker compose down         # Detener servicios
+#   docker compose logs -f      # Ver logs en tiempo real
+
+version: "3.8"
+
+services:
+
+  # ─── Base de datos PostgreSQL ───────────────────────────────
+  db:
+    image: supabase/postgres:15.1.0.147
+    container_name: fitup_db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: your-super-secret-password
+      POSTGRES_DB: postgres
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./supabase/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── API REST (PostgREST) ───────────────────────────────────
+  rest:
+    image: postgrest/postgrest:v12.0.2
+    container_name: fitup_rest
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      PGRST_DB_URI: postgres://postgres:your-super-secret-password@db:5432/postgres
+      PGRST_DB_SCHEMA: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: your-jwt-secret-min-32-chars-long!!
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # ─── Auth (GoTrue) ──────────────────────────────────────────
+  auth:
+    image: supabase/gotrue:v2.151.0
+    container_name: fitup_auth
+    restart: unless-stopped
+    ports:
+      - "9999:9999"
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      GOTRUE_DB_DRIVER: postgres
+      DATABASE_URL: postgres://postgres:your-super-secret-password@db:5432/postgres
+      GOTRUE_JWT_SECRET: your-jwt-secret-min-32-chars-long!!
+      GOTRUE_JWT_EXP: 3600
+      GOTRUE_DISABLE_SIGNUP: "false"
+      API_EXTERNAL_URL: http://localhost:8000
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # ─── API Gateway (Kong) ─────────────────────────────────────
+  kong:
+    image: kong:2.8.1
+    container_name: fitup_gateway
+    restart: unless-stopped
+    ports:
+      - "8000:8000"   # HTTP  → punto de entrada principal
+      - "8443:8443"   # HTTPS
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /var/lib/kong/kong.yml
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl
+    volumes:
+      - ./supabase/kong.yml:/var/lib/kong/kong.yml:ro
+    depends_on:
+      - rest
+      - auth
+
+  # ─── Supabase Studio (dashboard visual) ────────────────────
+  studio:
+    image: supabase/studio:20240422-5cf8f30
+    container_name: fitup_studio
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      SUPABASE_URL: http://kong:8000
+      STUDIO_PG_META_URL: http://meta:8080
+      SUPABASE_ANON_KEY: your-anon-key
+      SUPABASE_SERVICE_KEY: your-service-key
+    depends_on:
+      - kong
+
+volumes:
+  db_data:
